@@ -18,19 +18,92 @@
 #include <jni.h>
 #include <cinttypes>
 #include <android/log.h>
+#include <fluidsynth.h>
+#include <unistd.h>
 
 
-#define LOGI(...) \
-  ((void)__android_log_print(ANDROID_LOG_INFO, "hello-libs::", __VA_ARGS__))
-
-/* This is a trivial JNI example where we use a native method
- * to return a new VM String. See the corresponding Java source
- * file located at:
- *
- *   app/src/main/java/com/example/hellolibs/MainActivity.java
- */
+fluid_settings_t *settings;
+fluid_synth_t *synth = NULL;
+fluid_audio_driver_t *adriver = NULL;
+int handlerTeste(void* data, fluid_midi_event_t *event);
 extern "C" JNIEXPORT void  JNICALL
-Java_com_gabriel4k2_fluidsynthdemo_MainActivity_stringFromJNI(JNIEnv *env, jobject thiz) {
+Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startFluidSynthEngine(JNIEnv *env,
+                                                                      jobject envClass,
+                                                                      jstring sfAbsolutePath) {
 
 
+    const char *nativeString = env->GetStringUTFChars(sfAbsolutePath, nullptr);
+
+
+    /* Create the settings object. This example uses the default
+     * values for the settings. */
+    settings = new_fluid_settings();
+
+    if (settings == NULL) {
+        fprintf(stderr, "Failed to create the settings\n");
+    }
+
+    /* Create the synthesizer */
+    synth = new_fluid_synth(settings);
+
+    if (synth == NULL) {
+        fprintf(stderr, "Failed to create the synthesizer\n");
+    }
+
+    auto tese = fluid_synth_sfload(synth, nativeString, 1);
+    /* Load the soundfont */
+    if (tese == FLUID_FAILED) {
+        fprintf(stderr, "Failed to load the SoundFont\n");
+    }
+
+
+
+    /* Play a note */
+//    fluid_synth_noteon(synth, 0, 60, 100);
+    sleep(1);
+
+
+}
+
+
+
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_gabriel4k2_fluidsynthdemo_MainActivity_playMidiNote(JNIEnv *env, jobject thiz,
+                                                             jstring midi_absolute_path, jstring midi_absolute_path2) {
+
+    fluid_player_t* player;
+
+    player = new_fluid_player(synth);
+
+    const char *nativeString = env->GetStringUTFChars(midi_absolute_path, nullptr);
+
+    /* start the synthesizer thread */
+    /* play the midi files, if any */
+    auto status = fluid_player_status();
+    fluid_player_add(player, nativeString);
+
+
+    nativeString = env->GetStringUTFChars(midi_absolute_path2, nullptr);
+
+
+    /* start the synthesizer thread */
+    adriver = new_fluid_audio_driver(settings, synth);
+    /* play the midi files, if any */
+    auto ticks = fluid_player_get_total_ticks(player);
+
+
+
+    fluid_player_add(player, nativeString);
+    fluid_player_play(player);
+
+
+    fluid_player_join(player);
+
+}
+
+int handlerTeste(void* data, fluid_midi_event_t *event){
+    auto eventType = fluid_midi_event_get_type(event);
+    return 1;
 }
