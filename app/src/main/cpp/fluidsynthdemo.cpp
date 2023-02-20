@@ -20,90 +20,154 @@
 #include <android/log.h>
 #include <fluidsynth.h>
 #include <unistd.h>
+#include <vector>
+#include <string>
+
+fluid_synth_t *synth;
+fluid_audio_driver_t *adriver;
+fluid_sequencer_t *sequencer;
+short synthSeqID, mySeqID;
+unsigned int now;
+unsigned int seqduration;
+int sfId;
+
+typedef struct {
+    int patchNumber;
+    const char *instrumentName;
+    int bankOffset;
+} instrument;
 
 
-fluid_settings_t *settings;
-fluid_synth_t *synth = NULL;
-fluid_audio_driver_t *adriver = NULL;
-int handlerTeste(void* data, fluid_midi_event_t *event);
+void seq_callback(unsigned int time, fluid_event_t *event, fluid_sequencer_t *seq, void *data);
+
+void create_synth() {
+    fluid_settings_t *settings;
+    settings = new_fluid_settings();
+    fluid_settings_setint(settings, "synth.reverb.active", 0);
+    fluid_settings_setint(settings, "synth.chorus.active", 0);
+    synth = new_fluid_synth(settings);
+    adriver = new_fluid_audio_driver(settings, synth);
+    sequencer = new_fluid_sequencer2(0);
+
+    // register synth as first destination
+    synthSeqID = fluid_sequencer_register_fluidsynth(sequencer, synth);
+
+    // register myself as second destination
+    mySeqID = fluid_sequencer_register_client(sequencer, "me", seq_callback, NULL);
+
+
+    // the sequence duration, in ms
+    seqduration = 1000;
+}
+
+void delete_synth() {
+    delete_fluid_sequencer(sequencer);
+    delete_fluid_audio_driver(adriver);
+    delete_fluid_synth(synth);
+}
+
+std::vector<instrument>
+get_instruments_list() {
+    fluid_sfont_t *sfont;
+    fluid_preset_t *preset;
+    int offset;
+    std::vector<instrument> instruments;
+
+
+    sfont = fluid_synth_get_sfont_by_id(synth, sfId);
+    offset = fluid_synth_get_bank_offset(synth, sfId);
+
+
+    fluid_sfont_iteration_start(sfont);
+    while ((preset = fluid_sfont_iteration_next(sfont)) != NULL) {
+
+        auto bankOffset = fluid_preset_get_banknum(preset) + offset;
+        auto patchNumber = fluid_preset_get_num(preset);
+        auto instrumentName = fluid_preset_get_name(preset);
+        instruments.push_back(
+                instrument{patchNumber, instrumentName, bankOffset});
+
+    }
+
+    return instruments;
+
+
+}
+
+
+void loadsoundfont(const char *sfFile) {
+    sfId = fluid_synth_sfload(synth, sfFile, 1);
+    get_instruments_list();
+
+}
+
+void sendnoteon(int chan, short key, unsigned int date) {
+    fluid_event_t *evt = new_fluid_event();
+    fluid_event_set_source(evt, -1);
+    fluid_event_set_dest(evt, synthSeqID);
+    fluid_event_noteon(evt, chan, key, 127);
+    fluid_sequencer_send_at(sequencer, evt, date, 1);
+    delete_fluid_event(evt);
+}
+
+void schedule_next_callback() {
+    // I want to be called back before the end of the next sequence
+    unsigned int callbackdate = now + seqduration / 2;
+    fluid_event_t *evt = new_fluid_event();
+    fluid_event_set_source(evt, -1);
+    fluid_event_set_dest(evt, mySeqID);
+    fluid_event_timer(evt, NULL);
+    fluid_sequencer_send_at(sequencer, evt, callbackdate, 1);
+    delete_fluid_event(evt);
+}
+
+void schedule_next_sequence() {
+    // Called more or less before each sequence start
+    // the next sequence start date
+    now = now + seqduration;
+
+
+    sendnoteon(1, 60, now + seqduration);
+
+
+    // so that we are called back early enough to schedule the next sequence
+    schedule_next_callback();
+}
+
+/* sequencer callback */
+void seq_callback(unsigned int time, fluid_event_t *event, fluid_sequencer_t *seq, void *data) {
+    schedule_next_sequence();
+}
+
+void on_resume() {
+    // initialize our absolute date
+    now = fluid_sequencer_get_tick(sequencer);
+    schedule_next_sequence();
+
+    sleep(2);
+}
+
+
 extern "C" JNIEXPORT void  JNICALL
 Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startFluidSynthEngine(JNIEnv *env,
                                                                       jobject envClass,
                                                                       jstring sfAbsolutePath) {
 
 
-    const char *nativeString = env->GetStringUTFChars(sfAbsolutePath, nullptr);
+    const char *sfFilePath = env->GetStringUTFChars(sfAbsolutePath, nullptr);
 
 
-    /* Create the settings object. This example uses the default
-     * values for the settings. */
-    settings = new_fluid_settings();
-
-    if (settings == NULL) {
-        fprintf(stderr, "Failed to create the settings\n");
-    }
-
-    /* Create the synthesizer */
-    synth = new_fluid_synth(settings);
-
-    if (synth == NULL) {
-        fprintf(stderr, "Failed to create the synthesizer\n");
-    }
-
-    auto tese = fluid_synth_sfload(synth, nativeString, 1);
-    /* Load the soundfont */
-    if (tese == FLUID_FAILED) {
-        fprintf(stderr, "Failed to load the SoundFont\n");
-    }
-
-
-
-    /* Play a note */
-//    fluid_synth_noteon(synth, 0, 60, 100);
-    sleep(1);
+    create_synth();
+    loadsoundfont(sfFilePath);
+    on_resume();
 
 
 }
-
 
 
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_gabriel4k2_fluidsynthdemo_MainActivity_playMidiNote(JNIEnv *env, jobject thiz,
-                                                             jstring midi_absolute_path, jstring midi_absolute_path2) {
-
-    fluid_player_t* player;
-
-    player = new_fluid_player(synth);
-
-    const char *nativeString = env->GetStringUTFChars(midi_absolute_path, nullptr);
-
-    /* start the synthesizer thread */
-    /* play the midi files, if any */
-    auto status = fluid_player_status();
-    fluid_player_add(player, nativeString);
-
-
-    nativeString = env->GetStringUTFChars(midi_absolute_path2, nullptr);
-
-
-    /* start the synthesizer thread */
-    adriver = new_fluid_audio_driver(settings, synth);
-    /* play the midi files, if any */
-    auto ticks = fluid_player_get_total_ticks(player);
-
-
-
-    fluid_player_add(player, nativeString);
-    fluid_player_play(player);
-
-
-    fluid_player_join(player);
-
-}
-
-int handlerTeste(void* data, fluid_midi_event_t *event){
-    auto eventType = fluid_midi_event_get_type(event);
-    return 1;
+Java_com_gabriel4k2_fluidsynthdemo_MainActivity_pauseSynth(JNIEnv *env, jobject thiz) {
+    delete_synth();
 }

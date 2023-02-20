@@ -11,9 +11,14 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
 import com.gabriel4k2.fluidsynthdemo.ui.theme.FluidsynthdemoTheme
+import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
+
+    lateinit var audioJob: Job
+    lateinit var sfFilePath: String
 
     init {
 
@@ -21,19 +26,20 @@ class MainActivity : ComponentActivity() {
     }
 
      private external fun startFluidSynthEngine(sfAbsolutePath: String)
-     private external fun playMidiNote(midiAbsolutePath: String, midiAbsolutePath2: String)
+     private external fun pauseSynth()
+
+    override fun onResume() {
+        super.onResume()
+        audioJob = lifecycleScope.launch(Dispatchers.Default){
+            startFluidSynthEngine(sfFilePath)
+
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val sfFilePath = copyAssetToTmpFile("sfsource.sf2")
-        val midiFilePath =  copyAssetToTmpFile("C3.mid")
-        val midiFilePath2 =  copyAssetToTmpFile("C32.mid")
-
-        startFluidSynthEngine(sfFilePath)
-        playMidiNote(midiFilePath, midiFilePath2)
-
-
+        sfFilePath = copyAssetToTmpFile("sfsource.sf2")
 
         setContent {
             FluidsynthdemoTheme {
@@ -47,6 +53,13 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onPause() {
+        super.onPause()
+        pauseSynth()
+        audioJob.cancel()
+    }
+
 }
 
 @Composable

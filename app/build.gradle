@@ -6,7 +6,9 @@ plugins {
 android {
     namespace 'com.gabriel4k2.fluidsynthdemo'
     compileSdk 32
-
+    aaptOptions {
+        noCompress "sfsource.sf2"
+    }
 
     defaultConfig {
         applicationId "com.gabriel4k2.fluidsynthdemo"
