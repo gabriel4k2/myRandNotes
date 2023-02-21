@@ -23,13 +23,7 @@
 #include <vector>
 #include <string>
 
-fluid_synth_t *synth;
-fluid_audio_driver_t *adriver;
-fluid_sequencer_t *sequencer;
-short synthSeqID, mySeqID;
-unsigned int now;
-unsigned int seqduration;
-int sfId;
+
 
 typedef struct {
     int patchNumber;
@@ -37,8 +31,30 @@ typedef struct {
     int bankOffset;
 } instrument;
 
+typedef struct {
+    _jclass *cls;
+    _jmethodID *callbackId;
+} cb;
+
+
+fluid_synth_t *synth;
+fluid_audio_driver_t *adriver;
+fluid_sequencer_t *sequencer;
+JNIEnv *currentEnv;
+
+jobject currentClass;
+JavaVM * vm= new JavaVM();
+
+short synthSeqID, mySeqID;
+unsigned int now;
+unsigned int seqduration;
+int sfId;
+_jmethodID * onMidiNoteChangedCallbackId = nullptr;
+
 
 void seq_callback(unsigned int time, fluid_event_t *event, fluid_sequencer_t *seq, void *data);
+
+void schedule_next_sequence_from_cb();
 
 void create_synth() {
     fluid_settings_t *settings;
@@ -54,7 +70,6 @@ void create_synth() {
 
     // register myself as second destination
     mySeqID = fluid_sequencer_register_client(sequencer, "me", seq_callback, NULL);
-
 
     // the sequence duration, in ms
     seqduration = 1000;
@@ -73,10 +88,8 @@ get_instruments_list() {
     int offset;
     std::vector<instrument> instruments;
 
-
     sfont = fluid_synth_get_sfont_by_id(synth, sfId);
     offset = fluid_synth_get_bank_offset(synth, sfId);
-
 
     fluid_sfont_iteration_start(sfont);
     while ((preset = fluid_sfont_iteration_next(sfont)) != NULL) {
@@ -88,7 +101,6 @@ get_instruments_list() {
                 instrument{patchNumber, instrumentName, bankOffset});
 
     }
-
     return instruments;
 
 
@@ -101,16 +113,25 @@ void loadsoundfont(const char *sfFile) {
 
 }
 
-void sendnoteon(int chan, short key, unsigned int date) {
+void sendnoteon(int chan, short key, unsigned int date, JNIEnv *pEnv) {
+    int range = 83 - 0 + 1;
+    int num = rand() % range + 0;
     fluid_event_t *evt = new_fluid_event();
     fluid_event_set_source(evt, -1);
     fluid_event_set_dest(evt, synthSeqID);
-    fluid_event_noteon(evt, chan, key, 127);
+    fluid_event_noteon(evt, chan, num, 127);
     fluid_sequencer_send_at(sequencer, evt, date, 1);
     delete_fluid_event(evt);
+    if(onMidiNoteChangedCallbackId != nullptr){
+        auto myclass = pEnv->GetObjectClass(currentClass);
+        auto methodId =  pEnv->GetMethodID(myclass,"onMidiNoteChanged",
+                                          "(I)V");
+        pEnv->CallVoidMethod(currentClass, onMidiNoteChangedCallbackId, num);
+
+    }
 }
 
-void schedule_next_callback() {
+void schedule_next_callback(JNIEnv *pEnv) {
     // I want to be called back before the end of the next sequence
     unsigned int callbackdate = now + seqduration / 2;
     fluid_event_t *evt = new_fluid_event();
@@ -121,28 +142,34 @@ void schedule_next_callback() {
     delete_fluid_event(evt);
 }
 
-void schedule_next_sequence() {
+void schedule_next_sequence(JNIEnv * env) {
     // Called more or less before each sequence start
     // the next sequence start date
     now = now + seqduration;
-
-
-    sendnoteon(1, 60, now + seqduration);
-
+    sendnoteon(1, 60, now + seqduration, env);
 
     // so that we are called back early enough to schedule the next sequence
-    schedule_next_callback();
+    schedule_next_callback(env);
 }
 
 /* sequencer callback */
 void seq_callback(unsigned int time, fluid_event_t *event, fluid_sequencer_t *seq, void *data) {
-    schedule_next_sequence();
+    schedule_next_sequence_from_cb();
 }
 
-void on_resume() {
+void schedule_next_sequence_from_cb() {
+    JNIEnv *audioThreadEnv;
+    (*vm).AttachCurrentThread(&audioThreadEnv, nullptr);
+
+
+
+    schedule_next_sequence(audioThreadEnv);
+}
+
+void on_resume(JNIEnv *pEnv) {
     // initialize our absolute date
     now = fluid_sequencer_get_tick(sequencer);
-    schedule_next_sequence();
+    schedule_next_sequence(pEnv);
 
     sleep(2);
 }
@@ -156,10 +183,11 @@ Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startFluidSynthEngine(JNIEnv *en
 
     const char *sfFilePath = env->GetStringUTFChars(sfAbsolutePath, nullptr);
 
-
+   currentClass = (env->NewGlobalRef(envClass)) ;
+   env->GetJavaVM(&vm);
     create_synth();
     loadsoundfont(sfFilePath);
-    on_resume();
+    on_resume(env);
 
 
 }
@@ -170,4 +198,16 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_gabriel4k2_fluidsynthdemo_MainActivity_pauseSynth(JNIEnv *env, jobject thiz) {
     delete_synth();
+}
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_gabriel4k2_fluidsynthdemo_MainActivity_registerNoteChangeCallback(JNIEnv *env,
+                                                                           jobject thiz) {
+
+
+    jclass cls = env->GetObjectClass(thiz);
+    onMidiNoteChangedCallbackId =
+            env->GetMethodID(cls,"onMidiNoteChanged",
+                             "(I)V");
+
 }
