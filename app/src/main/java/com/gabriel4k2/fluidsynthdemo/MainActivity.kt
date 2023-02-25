@@ -5,6 +5,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
@@ -12,54 +15,79 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.lifecycleScope
-import com.gabriel4k2.fluidsynthdemo.ui.NoteUtils
+import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils
 import com.gabriel4k2.fluidsynthdemo.ui.theme.FluidsynthdemoTheme
+import com.gabriel4k2.fluidsynthdemo.data.Instrument
+import com.gabriel4k2.fluidsynthdemo.providers.LocalMoshiInstance
+import com.gabriel4k2.fluidsynthdemo.providers.MoshiProvider
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Types
+import com.squareup.moshi.adapter
 import kotlinx.coroutines.*
+import java.lang.reflect.Type
 import java.util.concurrent.Executors.newSingleThreadExecutor
+
+
 
 class MainActivity : ComponentActivity() {
 
-    lateinit var sfFilePath: String
     var noteName: MutableState<String>? = null
-    val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
-    val audioThread = newSingleThreadExecutor()
+    private val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
+    private val intervalInMs = 1000
+    private val audioThread = newSingleThreadExecutor()
+    private var instrumentList: List<Instrument> = emptyList()
 
     init {
 
         System.loadLibrary("fluidsynthdemo")
     }
 
-     private external fun startFluidSynthEngine(sfAbsolutePath: String)
-     private external fun registerNoteChangeCallback()
-     private external fun pauseSynth()
+    private external fun startFluidSynthEngine(sfAbsolutePath: String)
+    private external fun startPlayingNotes(intervalInMs: Long, instrument: Instrument)
+    private external fun pauseSynth()
+
 
     override fun onResume() {
         super.onResume()
 
-        audioThread.execute(Runnable { startFluidSynthEngine(sfFilePath) })
-        audioThread.execute(Runnable { registerNoteChangeCallback()  })
-//        audioJob = lifecycleScope.launch(Dispatchers.Default){
-//            registerNoteChangeCallback()
-//            startFluidSynthEngine(sfFilePath)
-//        }
+
+        audioThread.execute(Runnable {
+            startPlayingNotes(
+                intervalInMs = 1000,
+                instrument = Instrument.mock()
+            )
+        })
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ::onMidiNoteChanged.name
-        sfFilePath = copyAssetToTmpFile("sfsource.sf2")
+
+        val sfFilePath = copyAssetToTmpFile("sfsource.sf2")
+        startFluidSynthEngine(sfFilePath)
+        val instrumentsJson = resources.openRawResource(R.raw.instruments).bufferedReader(Charsets.UTF_8).use { it.readText() }
 
         setContent {
-            noteName =  remember {   mutableStateOf("-") }
+            noteName = remember { mutableStateOf("-") }
             FluidsynthdemoTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
-                ) {
-                    Greeting(noteName!!.value)
+                MoshiProvider{
+                    val moshiInstance = LocalMoshiInstance.current
+
+                    LaunchedEffect(key1 = true){
+                        val listType = Types.newParameterizedType(List::class.java, Instrument::class.java)
+                        val instrumentListAdapter: JsonAdapter<List<Instrument>> = moshiInstance.adapter(listType)
+                        instrumentList = instrumentListAdapter.fromJson(instrumentsJson) ?: emptyList()
+
+                    }
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colors.background
+                    ) {
+                        Greeting(noteName!!.value)
+                    }
                 }
+                // A surface container using the 'background' color from the theme
+
             }
         }
     }
@@ -69,19 +97,32 @@ class MainActivity : ComponentActivity() {
         pauseSynth()
     }
 
-    fun onMidiNoteChanged(midiNumber : Int) {
+    fun onMidiNoteChanged(midiNumber: Int) {
         var _noteName = midiToNoteMap[midiNumber]
         if (_noteName != null) {
-            noteName?.value= _noteName
+            noteName?.value = _noteName
         }
 
     }
+
 
 }
 
 @Composable
 fun Greeting(name: String) {
     Text(text = "Hello $name!", fontSize = 24.sp)
+}
+
+@Composable
+fun InstrumentList(instruments : List<Instrument>) {
+    LazyRow{
+        items(items= instruments){
+            Text(text = "Instrument name ${it.name} type ${it.type} bank ${it.bankOffset}", fontSize = 24.sp)
+
+        }
+      
+
+    }
 }
 
 @Preview(showBackground = true)

@@ -125,7 +125,7 @@ ${distribution_DIR}/jniLibs/x86_64/lib/libpcreposix.so
 
 
 
-add_library(fluidsynthdemo SHARED fluidsynthdemo.cpp )
+add_library(fluidsynthdemo SHARED MyNotesEngine.cpp NoteDispatcher.cpp)
 target_include_directories(fluidsynthdemo PRIVATE
 ${distribution_DIR}/jniLibs/x86_64/include
 )
