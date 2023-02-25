@@ -18,7 +18,7 @@ public:
      NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer, jobject mainActivityReference);
      ~NoteDispatcher();
 
-    void startNoteDispatching(unsigned int seqDurationMs, instrument *  currentInstrument);
+    void startNoteDispatching(JNIEnv * env, unsigned int seqDurationMs, instrument *  currentInstrument, short synthSeqId);
 
 
 
@@ -27,19 +27,21 @@ private:
     fluid_sequencer_t *sequencer;
     jobject mainActivityReference;
     instrument *currentInstrument;
+    bool isAttached = false;
     JavaVM *vm;
-    short sequencerId;
+    short clientId;
+    short synthSeqId;
     unsigned int now;
     unsigned int seqDurationMs;
 
 
-    void sendnoteon(int chan, unsigned int date);
+    void sendnoteon(int chan, unsigned int date, JNIEnv * env);
 
-    void schedule_next_sequence();
+    void schedule_next_sequence(JNIEnv * env);
 
     void schedule_next_callback();
 
-    void dispatchNewMidiNote(int midiNoteNumber);
+    void dispatchNewMidiNote(int midiNoteNumber, JNIEnv * env);
 
 };
 #endif //FLUIDSYNTHDEMO_NOTEDISPATCHER_H

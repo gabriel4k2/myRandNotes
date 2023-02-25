@@ -26,8 +26,8 @@
 
 
 int sfId;
-jobject engineHandle;
-
+MyNotesEngine * engineHandle;
+jobject currentClass;
 
 //std::vector<instrument> MyNotesEngine::get_instruments_list() {
 //    fluid_sfont_t *sfont;
@@ -62,14 +62,15 @@ Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startFluidSynthEngine(JNIEnv *en
 
     const char *sfFilePath = env->GetStringUTFChars(sfAbsolutePath, nullptr);
 
-    jobject currentClass = (env->NewGlobalRef(envClass));
+    currentClass = (env->NewGlobalRef(envClass));
     JavaVM *vm;
     env->GetJavaVM(&vm);
-    auto localEngineInstance = new MyNotesEngine(vm, currentClass);
+    engineHandle= new MyNotesEngine(vm, currentClass);
 
-    localEngineInstance->loadsoundfont(sfFilePath);
+    engineHandle->loadsoundfont(sfFilePath);
 
-    engineHandle = (env->NewGlobalRef(reinterpret_cast<jobject>(localEngineInstance)));
+//    engineHandle = reinterpret_cast<MyNotesEngine *>(env->NewGlobalRef(
+//            reinterpret_cast<jobject>(engineHandle)));
 
 
 }
@@ -95,10 +96,9 @@ MyNotesEngine::MyNotesEngine(JavaVM *vm, jobject mainActivityReference) {
     adriver = new_fluid_audio_driver(settings, synth);
     sequencer = new_fluid_sequencer2(0);
     this->vm = vm;
-    create_dispatcher(mainActivityReference);
 
 
-    fluid_sequencer_register_fluidsynth(sequencer, synth);
+    synthSeqID = fluid_sequencer_register_fluidsynth(sequencer, synth);
 }
 
 void MyNotesEngine::create_dispatcher(
@@ -111,10 +111,10 @@ void MyNotesEngine::loadsoundfont(const char *sfFilePath) {
 
 }
 
-void MyNotesEngine::start_playing_notes(unsigned int seqInMs, instrument *currentInstrument) {
+void MyNotesEngine::start_playing_notes(unsigned int seqInMs, instrument *currentInstrument, JNIEnv * env) {
 
 
-    (this->dispatcher)->startNoteDispatching(seqInMs, currentInstrument);
+    (this->dispatcher)->startNoteDispatching(env, seqInMs, currentInstrument,  synthSeqID);
 }
 
 MyNotesEngine::~MyNotesEngine() {
@@ -131,9 +131,9 @@ Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startPlayingNotes(JNIEnv *env, j
 
     auto engine = ((MyNotesEngine *) engineHandle);
     if (engine->dispatcher == nullptr) {
-        jobject currentClass = (env->NewGlobalRef(thiz));
+//        jobject currentClass = (env->NewGlobalRef(thiz));
         engine->create_dispatcher(currentClass);
     }
     engine->start_playing_notes(interval_in_ms,
-                                reinterpret_cast<::instrument *>(instrument));
+                                reinterpret_cast<::instrument *>(instrument), env);
 }

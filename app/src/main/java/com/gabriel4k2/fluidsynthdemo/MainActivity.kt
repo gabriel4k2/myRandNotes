@@ -64,7 +64,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val sfFilePath = copyAssetToTmpFile("sfsource.sf2")
-        startFluidSynthEngine(sfFilePath)
+        audioThread.execute(Runnable {
+            startFluidSynthEngine(sfFilePath)
+        })
+
         val instrumentsJson = resources.openRawResource(R.raw.instruments).bufferedReader(Charsets.UTF_8).use { it.readText() }
 
         setContent {

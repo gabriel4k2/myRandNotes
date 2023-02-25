@@ -15,7 +15,7 @@ public:
      ~MyNotesEngine();
 
     void loadsoundfont(const char *sfFilePath);
-    void start_playing_notes(unsigned int seqInMs, instrument *currentInstrument);
+    void start_playing_notes(unsigned int seqInMs, instrument *currentInstrument, JNIEnv * env);
 
 
     NoteDispatcher *dispatcher = nullptr;
@@ -27,6 +27,7 @@ private:
     fluid_sequencer_t *sequencer;
     fluid_synth_t *synth;
     fluid_audio_driver_t * adriver;
+    short synthSeqID;
 
 };
 
