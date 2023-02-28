@@ -23,9 +23,9 @@
 #include <vector>
 #include <string>
 #include "MyNotesEngine.h"
+#include "Instrument.h"
 
 
-int sfId;
 MyNotesEngine * engineHandle;
 jobject currentClass;
 
@@ -83,7 +83,8 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_gabriel4k2_fluidsynthdemo_MainActivity_pauseSynth(JNIEnv *env, jobject thiz) {
     // TODO see if dispatcher is really destroyed
-    ((MyNotesEngine *) engineHandle)->dispatcher = nullptr;
+    delete ((MyNotesEngine *) engineHandle)->dispatcher;
+
 }
 
 
@@ -107,14 +108,15 @@ void MyNotesEngine::create_dispatcher(
 }
 
 void MyNotesEngine::loadsoundfont(const char *sfFilePath) {
-    sfId = fluid_synth_sfload(synth, sfFilePath, 1);
+     this->sfId = fluid_synth_sfload(synth, sfFilePath, 1);
 
 }
 
-void MyNotesEngine::start_playing_notes(unsigned int seqInMs, instrument *currentInstrument, JNIEnv * env) {
+void MyNotesEngine::start_playing_notes(unsigned int seqInMs, jobject currentInstrument, JNIEnv * env) {
 
+    auto instrument = deserialize_instrument(env, reinterpret_cast<jobject>(currentInstrument));
 
-    (this->dispatcher)->startNoteDispatching(env, seqInMs, currentInstrument,  synthSeqID);
+    (this->dispatcher)->startNoteDispatching(env, seqInMs, instrument,  synthSeqID, synth, sfId);
 }
 
 MyNotesEngine::~MyNotesEngine() {
@@ -135,5 +137,5 @@ Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startPlayingNotes(JNIEnv *env, j
         engine->create_dispatcher(currentClass);
     }
     engine->start_playing_notes(interval_in_ms,
-                                reinterpret_cast<::instrument *>(instrument), env);
+                                instrument, env);
 }

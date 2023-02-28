@@ -4,7 +4,9 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
@@ -14,6 +16,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils
 import com.gabriel4k2.fluidsynthdemo.ui.theme.FluidsynthdemoTheme
@@ -33,7 +36,7 @@ class MainActivity : ComponentActivity() {
 
     var noteName: MutableState<String>? = null
     private val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
-    private val intervalInMs = 1000
+    private val intervalInMs = mutableStateOf(1000L)
     private val audioThread = newSingleThreadExecutor()
     private var instrumentList: List<Instrument> = emptyList()
 
@@ -47,18 +50,7 @@ class MainActivity : ComponentActivity() {
     private external fun pauseSynth()
 
 
-    override fun onResume() {
-        super.onResume()
 
-
-        audioThread.execute(Runnable {
-            startPlayingNotes(
-                intervalInMs = 1000,
-                instrument = Instrument.mock()
-            )
-        })
-
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,6 +72,7 @@ class MainActivity : ComponentActivity() {
                         val listType = Types.newParameterizedType(List::class.java, Instrument::class.java)
                         val instrumentListAdapter: JsonAdapter<List<Instrument>> = moshiInstance.adapter(listType)
                         instrumentList = instrumentListAdapter.fromJson(instrumentsJson) ?: emptyList()
+                        print(instrumentList)
 
                     }
                     Surface(
@@ -87,6 +80,29 @@ class MainActivity : ComponentActivity() {
                         color = MaterialTheme.colors.background
                     ) {
                         Greeting(noteName!!.value)
+                        Column() {
+                            Button(modifier = Modifier.size(150.dp),onClick = { audioThread.execute(Runnable {
+                                startPlayingNotes(
+                                    intervalInMs = 5000,
+                                    instrument = instrumentList.first { it.type == "trumpet" }
+                                )
+                            }) }) {
+                                Text("Go to 1000ms with trumpet")
+                            }
+
+
+                            Button(modifier = Modifier.size(150.dp),onClick = { audioThread.execute(Runnable {
+                                startPlayingNotes(
+                                    intervalInMs = 1000,
+                                    instrument = instrumentList.first { it.type == "clarinet" }
+                                )
+                            }) }) {
+                                Text("Go to 5000ms with viola")
+                            }
+
+                            Text("note is ${noteName!!.value}", fontSize = 24.sp)
+                        }
+
                     }
                 }
                 // A surface container using the 'background' color from the theme

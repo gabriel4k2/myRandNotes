@@ -4,11 +4,21 @@
 #include <cstdlib>
 #include <functional>
 #include "NoteDispatcher.h"
+unsigned int noteDuration = 3000;
+using namespace std;
+typedef struct {
+    unsigned int seqDurationMs;
+    instrument instrument;
+    vector<int> * midiNotes;
+} dispatching_configs;
 
-void NoteDispatcher::startNoteDispatching(JNIEnv * env, unsigned int seqDurationMs, instrument *  currentInstrument, short synthSeqId ) {
+void NoteDispatcher::startNoteDispatching(JNIEnv *env, unsigned int seqDurationMs,
+                                          instrument currentInstrument, short synthSeqId, fluid_synth_t *synth, int sfId) {
     // remove all queued events that were  possibly using another time interval/
     // instrument.
-//    fluid_sequencer_remove_events(sequencer, -1, clientId, -1);
+    fluid_sequencer_remove_events(sequencer, -1, clientId, -1);
+    fluid_synth_program_select(synth, 0, sfId, currentInstrument.bankOffset, currentInstrument.patchNumber);
+
 
     now = fluid_sequencer_get_tick(sequencer);
     this->seqDurationMs = seqDurationMs;
@@ -18,31 +28,43 @@ void NoteDispatcher::startNoteDispatching(JNIEnv * env, unsigned int seqDuration
 
 }
 
-void NoteDispatcher::sendnoteon(int chan, unsigned int date, JNIEnv * env) {
-    int range = 83 - 0 + 1;
-    int num = rand() % range + 0;
+void NoteDispatcher::sendnoteon(int chan, unsigned int date, int key, JNIEnv *env) {
+
 
     fluid_event_t *evt = new_fluid_event();
     fluid_event_set_source(evt, -1);
     fluid_event_set_dest(evt, synthSeqId);
-    fluid_event_noteon(evt, chan, num, 60);
+    fluid_event_noteon(evt, chan, key, 100);
     fluid_sequencer_send_at(sequencer, evt, date, 1);
     delete_fluid_event(evt);
 
-    dispatchNewMidiNote(num, env);
+    dispatchNewMidiNote(key, env);
+}
+void NoteDispatcher::sendnoteoff(int chan, unsigned int date, int key) {
+    fluid_event_t *ev = new_fluid_event();
+    fluid_event_set_source(ev, -1);
+    fluid_event_set_dest(ev, synthSeqId);
+    fluid_event_noteoff(ev, chan, key);
+    fluid_sequencer_send_at(sequencer, ev, date, 1);
+    delete_fluid_event(ev);
 }
 
 
-void NoteDispatcher::schedule_next_sequence(JNIEnv * env) {
+
+void NoteDispatcher::schedule_next_sequence(JNIEnv *env) {
 
     now = now + seqDurationMs;
-    sendnoteon(0,   now , env);
 
+    int range = 83 - 0 + 1;
+    int randomNoteNumber = rand() % range + 10;
+    sendnoteon(0, now,randomNoteNumber ,  env);
+   sendnoteoff(0, now+seqDurationMs,randomNoteNumber );
     schedule_next_callback();
 }
 
 
-NoteDispatcher::NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer,  jobject mainActivityReference) {
+NoteDispatcher::NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer,
+                               jobject mainActivityReference) {
 
 
     void (*cb)(unsigned int, fluid_event_t *, fluid_sequencer_t *, void *) = [](
@@ -51,7 +73,7 @@ NoteDispatcher::NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer,  jobjec
             void *data) {
 
         auto *classRef = static_cast<NoteDispatcher *>(data);
-        if(!classRef->isAttached){
+        if (!classRef->isAttached) {
             (*classRef->vm).AttachCurrentThread(&classRef->audioThreadEnv, nullptr);
             classRef->isAttached = true;
         }
@@ -59,7 +81,6 @@ NoteDispatcher::NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer,  jobjec
 
         classRef->schedule_next_sequence(classRef->audioThreadEnv);
     };
-
 
 
     clientId = fluid_sequencer_register_client(sequencer, "me",
@@ -72,7 +93,7 @@ NoteDispatcher::NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer,  jobjec
 
 void NoteDispatcher::schedule_next_callback() {
     // I want to be called back before the end of the next sequence
-   unsigned int callbackdate = now + seqDurationMs / 2;
+    unsigned int callbackdate = now + seqDurationMs ;
     fluid_event_t *evt = new_fluid_event();
     fluid_event_set_source(evt, -1);
     fluid_event_set_dest(evt, clientId);
@@ -81,7 +102,7 @@ void NoteDispatcher::schedule_next_callback() {
     delete_fluid_event(evt);
 }
 
-void NoteDispatcher::dispatchNewMidiNote(int midiNoteNumber, JNIEnv * env) {
+void NoteDispatcher::dispatchNewMidiNote(int midiNoteNumber, JNIEnv *env) {
     auto myclass = env->GetObjectClass(this->mainActivityReference);
     auto methodId = env->GetMethodID(myclass, "onMidiNoteChanged",
                                      "(I)V");
@@ -89,6 +110,7 @@ void NoteDispatcher::dispatchNewMidiNote(int midiNoteNumber, JNIEnv * env) {
 }
 
 NoteDispatcher::~NoteDispatcher() {
-    fluid_sequencer_unregister_client(sequencer, clientId );
+    fluid_sequencer_unregister_client(sequencer, clientId);
     (*vm).DetachCurrentThread();
 }
+
