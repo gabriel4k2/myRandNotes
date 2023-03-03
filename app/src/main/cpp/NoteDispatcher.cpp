@@ -4,25 +4,22 @@
 #include <cstdlib>
 #include <functional>
 #include "NoteDispatcher.h"
-unsigned int noteDuration = 3000;
-using namespace std;
-typedef struct {
-    unsigned int seqDurationMs;
-    instrument instrument;
-    vector<int> * midiNotes;
-} dispatching_configs;
 
-void NoteDispatcher::startNoteDispatching(JNIEnv *env, unsigned int seqDurationMs,
-                                          instrument currentInstrument, short synthSeqId, fluid_synth_t *synth, int sfId) {
+void
+NoteDispatcher::startNoteDispatching(JNIEnv *env, short synthSeqId, fluid_synth_t *synth, int sfId,
+                                     dispatching_configs config) {
     // remove all queued events that were  possibly using another time interval/
     // instrument.
+    auto currentInstrument = config.instrument;
     fluid_sequencer_remove_events(sequencer, -1, clientId, -1);
-    fluid_synth_program_select(synth, 0, sfId, currentInstrument.bankOffset, currentInstrument.patchNumber);
+    fluid_synth_program_select(synth, 0, sfId, currentInstrument.bankOffset,
+                               currentInstrument.patchNumber);
 
 
     now = fluid_sequencer_get_tick(sequencer);
-    this->seqDurationMs = seqDurationMs;
+    this->seqDurationMs = config.seqDurationMs;
     this->synthSeqId = synthSeqId;
+    this->midiNotes = config.midiNotes;
     schedule_next_sequence(env);
 
 
@@ -40,6 +37,7 @@ void NoteDispatcher::sendnoteon(int chan, unsigned int date, int key, JNIEnv *en
 
     dispatchNewMidiNote(key, env);
 }
+
 void NoteDispatcher::sendnoteoff(int chan, unsigned int date, int key) {
     fluid_event_t *ev = new_fluid_event();
     fluid_event_set_source(ev, -1);
@@ -50,15 +48,15 @@ void NoteDispatcher::sendnoteoff(int chan, unsigned int date, int key) {
 }
 
 
-
 void NoteDispatcher::schedule_next_sequence(JNIEnv *env) {
 
     now = now + seqDurationMs;
 
-    int range = 83 - 0 + 1;
-    int randomNoteNumber = rand() % range + 10;
-    sendnoteon(0, now,randomNoteNumber ,  env);
-   sendnoteoff(0, now+seqDurationMs,randomNoteNumber );
+    int range = this->midiNotes.size() - 1;
+    int randomNoteNumberIndex = rand() % range;
+    auto randomNoteNumber = this->midiNotes[randomNoteNumberIndex];
+    sendnoteon(0, now, randomNoteNumber, env);
+    sendnoteoff(0, now + seqDurationMs, randomNoteNumber);
     schedule_next_callback();
 }
 
@@ -92,8 +90,7 @@ NoteDispatcher::NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer,
 }
 
 void NoteDispatcher::schedule_next_callback() {
-    // I want to be called back before the end of the next sequence
-    unsigned int callbackdate = now + seqDurationMs ;
+    unsigned int callbackdate = now + seqDurationMs;
     fluid_event_t *evt = new_fluid_event();
     fluid_event_set_source(evt, -1);
     fluid_event_set_dest(evt, clientId);
