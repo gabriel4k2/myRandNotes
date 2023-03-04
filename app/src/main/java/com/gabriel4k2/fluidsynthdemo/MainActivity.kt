@@ -4,32 +4,28 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils
 import com.gabriel4k2.fluidsynthdemo.ui.theme.FluidsynthdemoTheme
 import com.gabriel4k2.fluidsynthdemo.data.Instrument
 import com.gabriel4k2.fluidsynthdemo.providers.LocalMoshiInstance
+import com.gabriel4k2.fluidsynthdemo.providers.LocalThemeProvider
 import com.gabriel4k2.fluidsynthdemo.providers.MoshiProvider
+import com.gabriel4k2.fluidsynthdemo.providers.ThemeProvider
+import com.gabriel4k2.fluidsynthdemo.ui.NoteDisplayer
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
-import com.squareup.moshi.adapter
 import kotlinx.coroutines.*
-import java.lang.reflect.Type
 import java.util.concurrent.Executors.newSingleThreadExecutor
-
 
 
 class MainActivity : ComponentActivity() {
@@ -50,8 +46,6 @@ class MainActivity : ComponentActivity() {
     private external fun pauseSynth()
 
 
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -60,51 +54,54 @@ class MainActivity : ComponentActivity() {
             startFluidSynthEngine(sfFilePath)
         })
 
-        val instrumentsJson = resources.openRawResource(R.raw.instruments).bufferedReader(Charsets.UTF_8).use { it.readText() }
+        val instrumentsJson =
+            resources.openRawResource(R.raw.instruments).bufferedReader(Charsets.UTF_8)
+                .use { it.readText() }
 
         setContent {
             noteName = remember { mutableStateOf("-") }
             FluidsynthdemoTheme {
-                MoshiProvider{
-                    val moshiInstance = LocalMoshiInstance.current
-
-                    LaunchedEffect(key1 = true){
-                        val listType = Types.newParameterizedType(List::class.java, Instrument::class.java)
-                        val instrumentListAdapter: JsonAdapter<List<Instrument>> = moshiInstance.adapter(listType)
-                        instrumentList = instrumentListAdapter.fromJson(instrumentsJson) ?: emptyList()
-                        print(instrumentList)
-
-                    }
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colors.background
-                    ) {
-                        Greeting(noteName!!.value)
-                        Column() {
-                            Button(modifier = Modifier.size(150.dp),onClick = { audioThread.execute(Runnable {
-                                startPlayingNotes(
-                                    intervalInMs = 5000,
-                                    instrument = instrumentList.first { it.type == "trumpet" }
-                                )
-                            }) }) {
-                                Text("Go to 1000ms with trumpet")
-                            }
+                MoshiProvider {
+                    ThemeProvider {
+                        val moshiInstance = LocalMoshiInstance.current
+                        val dimensions = LocalThemeProvider.current.dimensions
+                        val noteDisplayerContainerPadding = dimensions.noteDisplayerHorizontalContainerPadding
 
 
-                            Button(modifier = Modifier.size(150.dp),onClick = { audioThread.execute(Runnable {
-                                startPlayingNotes(
-                                    intervalInMs = 1000,
-                                    instrument = instrumentList.first { it.type == "clarinet" }
-                                )
-                            }) }) {
-                                Text("Go to 5000ms with viola")
-                            }
 
-                            Text("note is ${noteName!!.value}", fontSize = 24.sp)
+                        LaunchedEffect(key1 = true) {
+                            val listType =
+                                Types.newParameterizedType(List::class.java, Instrument::class.java)
+                            val instrumentListAdapter: JsonAdapter<List<Instrument>> =
+                                moshiInstance.adapter(listType)
+                            instrumentList =
+                                instrumentListAdapter.fromJson(instrumentsJson) ?: emptyList()
+                            print(instrumentList)
+
                         }
 
+                        ConstraintLayout(
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            val (noteDisplayer) = createRefs()
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .constrainAs(noteDisplayer) {
+                                        top.linkTo(
+                                            parent.top,
+                                            margin = dimensions.noteDisplayerRadius + dimensions.noteDisplayerTopContainerPadding
+                                        )
+                                    }, horizontalAlignment = CenterHorizontally
+                            ) {
+                                NoteDisplayer()
+
+                            }
+
+                        }
                     }
                 }
+
                 // A surface container using the 'background' color from the theme
 
             }
@@ -133,13 +130,16 @@ fun Greeting(name: String) {
 }
 
 @Composable
-fun InstrumentList(instruments : List<Instrument>) {
-    LazyRow{
-        items(items= instruments){
-            Text(text = "Instrument name ${it.name} type ${it.type} bank ${it.bankOffset}", fontSize = 24.sp)
+fun InstrumentList(instruments: List<Instrument>) {
+    LazyRow {
+        items(items = instruments) {
+            Text(
+                text = "Instrument name ${it.name} type ${it.type} bank ${it.bankOffset}",
+                fontSize = 24.sp
+            )
 
         }
-      
+
 
     }
 }
