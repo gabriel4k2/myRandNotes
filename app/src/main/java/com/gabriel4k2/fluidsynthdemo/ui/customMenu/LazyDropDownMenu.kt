@@ -2,24 +2,23 @@ package com.gabriel4k2.fluidsynthdemo.ui.customMenu
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import dev.chrisbanes.snapper.ExperimentalSnapperApi
+import dev.chrisbanes.snapper.rememberSnapperFlingBehavior
 
 
 // Menu open/close animation.
@@ -28,20 +27,25 @@ internal const val OutTransitionDuration = 75
 
 internal const val MaximumVisibleItems = 3
 
+@OptIn(ExperimentalSnapperApi::class)
 @Composable
 fun <T> LazyDropDownMenu(
     items: List<T>,
     width: Dp,
     itemHeight: Dp,
     expanded: Boolean,
-    onExpansionChange: (Boolean) -> Unit,
     onItemClick: (T) -> Unit,
+    onExpandChange: () -> Unit,
 
     ) {
 
     val expandedStates = remember { MutableTransitionState(false) }
     expandedStates.targetState = expanded
     val transition = updateTransition(expandedStates, "DropDownMenu")
+    val lazyListState = rememberLazyListState()
+    val flingBehavior = rememberSnapperFlingBehavior(lazyListState = lazyListState)
+
+
     val scale by transition.animateFloat(
         transitionSpec = {
             if (false isTransitioningTo true) {
@@ -88,30 +92,37 @@ fun <T> LazyDropDownMenu(
         }
     }
 
-    LazyColumn(modifier = Modifier
-        .graphicsLayer {
-            scaleY = scale
-            scaleX = scale
-            this.alpha = alpha
-        }
-        .width(width)
-        .background(Color.Red)
-        .height(if (expanded) itemHeight * MaximumVisibleItems else 0.dp)) {
-        items(items) { item ->
-            DropdownMenuItem(
-                modifier = Modifier
-                    .height(itemHeight)
-                    .width(width),
-                onClick = {
-                    onItemClick(item)
-                    onExpansionChange(false)
-
+    Box(){
+        Popup(onDismissRequest = { onExpandChange()}) {
+            LazyColumn(modifier = Modifier
+                .graphicsLayer {
+                    scaleY = scale
+                    scaleX = scale
+                    this.alpha = alpha
                 }
-            ) {
-                Text(item.toString())
+                .width(width)
+                .background(MaterialTheme.colors.primaryVariant)
+                .height(if (expanded) itemHeight * MaximumVisibleItems else 0.dp),
+                state = lazyListState,
+                flingBehavior = flingBehavior) {
+                items(items) { item ->
+                    DropdownMenuItem(
+                        modifier = Modifier
+                            .height(itemHeight)
+                            .width(width),
+                        onClick = {
+                            onItemClick(item)
+
+                        }
+                    ) {
+                        Text( text = item.toString())
+                    }
+                }
             }
         }
     }
+
+
 
 
 }

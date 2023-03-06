@@ -3,16 +3,25 @@ package com.gabriel4k2.fluidsynthdemo.ui
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import com.gabriel4k2.fluidsynthdemo.R
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
+import com.gabriel4k2.fluidsynthdemo.ui.customMenu.ExposedDropdownMenu
 import com.gabriel4k2.fluidsynthdemo.ui.customMenu.LazyDropDownMenu
 import com.gabriel4k2.fluidsynthdemo.ui.model.UIInstrument
 import kotlinx.coroutines.flow.filter
@@ -23,79 +32,26 @@ fun SettingsSection(instrumentList: List<UIInstrument>, currentInstrument: UIIns
     val interactionSource = remember { MutableInteractionSource() }
 
 
-
-    ExposedDropdownMenu(items = instrumentList, selected = currentInstrument, onItemSelected = {})
-
-
-}
-
-
-@Composable
-fun <T> ExposedDropdownMenu(
-    items: List<T>,
-    selected: T ,
-    onItemSelected: (String) -> Unit,
-) {
-    var expanded by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-
-
-    LaunchedEffect(interactionSource) {
-        interactionSource.interactions
-            .filter { it is PressInteraction.Press }
-            .collect {
-                expanded = !expanded
-            }
+    Column(verticalArrangement =  Arrangement.spacedBy(20.dp)) {
+        InstrumentSelectionSection(instrumentList, currentInstrument)
     }
-    ExposedDropdownMenuStack(
-        textField = {
-            OutlinedTextField(
-                value = selected.toString(),
-                onValueChange = {},
-                interactionSource = interactionSource,
-                readOnly = true,
-                label = { Text("Instrument") },
-                trailingIcon = {
-                    val rotation by animateFloatAsState(if (expanded) 180F else 0F)
-                    IconButton(
-                        { expanded = !expanded }
-                    ) {
-                        Icon(
-                            rememberVectorPainter(Icons.Default.ArrowDropDown),
-                            contentDescription = "Dropdown Arrow",
-                            Modifier.rotate(rotation),
-                        )
-                    }
-                }
-            )
-        }
-    ) { boxWidth, itemHeight ->
-        LazyDropDownMenu(
-            items = items,
-            width = boxWidth,
-            itemHeight = itemHeight,
-            expanded = expanded,
-            onExpansionChange = { expanded = it },
-            onItemClick = {})
-    }
+
+
 }
 
 @Composable
-private fun ExposedDropdownMenuStack(
-    textField: @Composable () -> Unit,
-    dropdownMenu: @Composable (boxWidth: Dp, itemHeight: Dp) -> Unit
-) {
-    SubcomposeLayout { constraints ->
-        val textFieldPlaceable =
-            subcompose(ExposedDropdownMenuSlot.TextField, textField).first().measure(constraints)
-        val dropdownPlaceable = subcompose(ExposedDropdownMenuSlot.Dropdown) {
-            dropdownMenu(textFieldPlaceable.width.toDp(), textFieldPlaceable.height.toDp())
-        }.first().measure(constraints)
-        layout(textFieldPlaceable.width, textFieldPlaceable.height) {
-            textFieldPlaceable.placeRelative(0, 0)
-            dropdownPlaceable.placeRelative(0, textFieldPlaceable.height)
-        }
-    }
-}
+fun InstrumentSelectionSection(instrumentList: List<UIInstrument>, currentInstrument: UIInstrument) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)){
+        Icon(
+            painter=painterResource(id = R.drawable.ic_guitar_acoustic),
+            contentDescription = "Instrument",
+            modifier = Modifier.size(32.dp),
 
-private enum class ExposedDropdownMenuSlot { TextField, Dropdown }
+        )
+
+        ExposedDropdownMenu(items = instrumentList, selected = currentInstrument, onItemSelected = {})
+
+
+    }
+
+}

@@ -29,7 +29,6 @@ import com.gabriel4k2.fluidsynthdemo.ui.SettingsSection
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import java.util.concurrent.Executors.newSingleThreadExecutor
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -118,7 +117,7 @@ class MainActivity : ComponentActivity() {
                             },
                             icon = {
                                 Icon(
-                                    painter = painterResource(id = R.drawable.baseline_music_note_24),
+                                    painter = painterResource(id = R.drawable.ic_music_note),
                                     contentDescription = ""
                                 )
                             },
