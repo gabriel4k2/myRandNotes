@@ -1,12 +1,17 @@
-package com.gabriel4k2.fluidsynthdemo.providers
+package com.gabriel4k2.fluidsynthdemo.ui.providers
 
 import android.content.res.Configuration
+import androidx.compose.material.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 
 val LocalThemeProvider = compositionLocalOf<Theme> { error("No active user found!") }
@@ -14,6 +19,8 @@ val LocalThemeProvider = compositionLocalOf<Theme> { error("No active user found
 class Colors{
     // Color 1e90ff
     val primary= Color(0.11f,0.56f,1.0f,1f )
+    // #1f69d9
+    val primaryVariant= Color(0.12f,0.41f,0.85f,1f )
     // 6bb6ff
     val primaryLight= Color(0.72f,0.86f,1.0f,1f )
     val onPrimary= Color(0f,0.0f,0.1f,1f )
@@ -23,9 +30,19 @@ class Colors{
     val teste= Color(0.15f, 0.37f,0.64f,1f )
 
 }
+val Typography = Typography(
+    body1 = TextStyle(
+        fontFamily = FontFamily.Default,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp
+    )
+
+)
 
 class Dimensions(configuration : Configuration){
     // Color 1e90ff
+    val containerHorizontalPadding = 20.dp
+    val largePadding = 32.dp
     val noteDisplayerHorizontalContainerPadding  = 70.dp
     val noteDisplayerTopContainerPadding  = noteDisplayerHorizontalContainerPadding/2
     val noteDisplayerRadius = ((configuration.screenWidthDp.dp - noteDisplayerHorizontalContainerPadding.times(2))/2)

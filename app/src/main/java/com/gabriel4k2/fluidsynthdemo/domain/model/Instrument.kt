@@ -1,4 +1,4 @@
-package com.gabriel4k2.fluidsynthdemo.data
+package com.gabriel4k2.fluidsynthdemo.domain.model
 
 import com.squareup.moshi.Json
 
@@ -11,9 +11,9 @@ data class Instrument(
     @Json(name = "bank_offset")
     val bankOffset: Int
 ) {
+
     companion object {
-        fun mock(): Instrument {
-            return Instrument(patchNumber = 0, name = "Stereo Grand", bankOffset = 0, type = "piano")
-        }
+        val EMPTY_INSTRUMENT = Instrument(patchNumber = -1, name = "-", bankOffset = -1, type = "-")
+
     }
 }

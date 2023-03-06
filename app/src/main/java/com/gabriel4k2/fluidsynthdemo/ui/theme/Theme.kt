@@ -1,47 +1,31 @@
-package com.gabriel4k2.fluidsynthdemo.ui.theme
+package com.example.compose
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
-private val DarkColorPalette = darkColors(
-    primary = Purple200,
-    primaryVariant = Purple700,
-    secondary = Teal200
+
+private val LightColors = lightColors(
+    primary = Color(0.121f,0.28f,0.72f,1f ),
+    primaryVariant = Color(0.84f,0.89f,0.98f,1f ),
+    secondary = Color(0.72549f,0.55f,0.12f,1f ),
+
 )
 
-private val LightColorPalette = lightColors(
-    primary = Purple500,
-    primaryVariant = Purple700,
-    secondary = Teal200
 
-    /* Other default colors to override
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color.White,
-    onSecondary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
-    */
-)
+
 
 @Composable
-fun FluidsynthdemoTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
+fun AppTheme(
+  useDarkTheme: Boolean = isSystemInDarkTheme(),
+  content: @Composable() () -> Unit
 ) {
-    val colors = if (darkTheme) {
-        DarkColorPalette
-    } else {
-        LightColorPalette
-    }
+  val colors = LightColors
 
-    MaterialTheme(
-        colors = colors,
-        typography = Typography,
-        shapes = Shapes,
-        content = content
-    )
+  MaterialTheme(
+    colors = colors,
+    content = content
+  )
 }

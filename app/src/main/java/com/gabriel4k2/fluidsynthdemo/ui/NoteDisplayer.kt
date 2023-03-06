@@ -3,6 +3,7 @@ package com.gabriel4k2.fluidsynthdemo.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,18 +15,19 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import com.gabriel4k2.fluidsynthdemo.providers.LocalThemeProvider
+import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalThemeProvider
 
 @Composable
 fun NoteDisplayer( currentNote:String = "C1") {
     val theme = LocalThemeProvider.current
-    val colors = theme.colors
+    val colors = MaterialTheme.colors
+
     val radiusInDp = theme.dimensions.noteDisplayerRadius
     val innerRadiusInPx= with(LocalDensity.current){ radiusInDp.toPx()}
-    val outerRadiusInPx= with(LocalDensity.current){ (radiusInDp+2.dp).toPx()}
+    val outerRadiusInPx= with(LocalDensity.current){ (radiusInDp+1.dp).toPx()}
         Canvas(Modifier){
-            drawCircle(color = colors.teste, radius = outerRadiusInPx)
-            drawCircle(color = colors.primaryLight, radius = innerRadiusInPx)
+            drawCircle(color = colors.primaryVariant, radius = outerRadiusInPx)
+            drawCircle(color = colors.primaryVariant, radius = innerRadiusInPx)
             drawIntoCanvas {
 
                 it.nativeCanvas.drawText("oi", 0F,
