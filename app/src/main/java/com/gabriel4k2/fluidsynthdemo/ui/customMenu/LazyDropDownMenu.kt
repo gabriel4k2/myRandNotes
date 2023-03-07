@@ -12,13 +12,16 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import dev.chrisbanes.snapper.ExperimentalSnapperApi
 import dev.chrisbanes.snapper.rememberSnapperFlingBehavior
+import kotlinx.coroutines.launch
 
 
 // Menu open/close animation.
@@ -35,7 +38,7 @@ fun <T> LazyDropDownMenu(
     itemHeight: Dp,
     expanded: Boolean,
     onItemClick: (T) -> Unit,
-    onExpandChange: () -> Unit,
+    onExpandChange: suspend () -> Unit,
 
     ) {
 
@@ -44,6 +47,7 @@ fun <T> LazyDropDownMenu(
     val transition = updateTransition(expandedStates, "DropDownMenu")
     val lazyListState = rememberLazyListState()
     val flingBehavior = rememberSnapperFlingBehavior(lazyListState = lazyListState)
+    val cScope = rememberCoroutineScope()
 
 
     val scale by transition.animateFloat(
@@ -92,37 +96,39 @@ fun <T> LazyDropDownMenu(
         }
     }
 
-    Box(){
-        Popup(onDismissRequest = { onExpandChange()}) {
-            LazyColumn(modifier = Modifier
-                .graphicsLayer {
-                    scaleY = scale
-                    scaleX = scale
-                    this.alpha = alpha
-                }
-                .width(width)
-                .background(MaterialTheme.colors.primaryVariant)
-                .height(if (expanded) itemHeight * MaximumVisibleItems else 0.dp),
-                state = lazyListState,
-                flingBehavior = flingBehavior) {
-                items(items) { item ->
-                    DropdownMenuItem(
-                        modifier = Modifier
-                            .height(itemHeight)
-                            .width(width),
-                        onClick = {
-                            onItemClick(item)
+    Box(
+    ) {
+        if (expanded) {
+            Popup(onDismissRequest = { cScope.launch { onExpandChange() } }) {
+                LazyColumn(modifier = Modifier
+                    .graphicsLayer {
+                        scaleY = scale
+                        scaleX = scale
+                        this.alpha = alpha
+                    }
+                    .width(width)
+                    .background(MaterialTheme.colors.primaryVariant)
+                    .height(if (expanded) itemHeight * MaximumVisibleItems else 0.dp),
+                    state = lazyListState,
+                    flingBehavior = flingBehavior) {
+                    items(items) { item ->
+                        DropdownMenuItem(
+                            modifier = Modifier
+                                .height(itemHeight)
+                                .width(width),
+                            onClick = {
+                                onItemClick(item)
 
+                            }
+                        ) {
+                            Text(text = item.toString())
                         }
-                    ) {
-                        Text( text = item.toString())
                     }
                 }
             }
         }
+
     }
-
-
 
 
 }

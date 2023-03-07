@@ -1,9 +1,9 @@
 package com.gabriel4k2.fluidsynthdemo.ui.customMenu
 
+import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.FocusInteraction
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -16,6 +16,16 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
+
+enum class ClickSources {
+    FROM_TEXT_FIELD,
+    FROM_MENU
+}
+
 
 @Composable
 fun <T> ExposedDropdownMenu(
@@ -23,57 +33,96 @@ fun <T> ExposedDropdownMenu(
     selected: T,
     onItemSelected: (String) -> Unit,
 ) {
+    var expandedFlow = remember { MutableSharedFlow<ClickSources>() }
     var expanded by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-    val currentFocus = remember { mutableStateOf(FocusInteraction.Focus()) }
+    var currentFocus = remember {
+        FocusInteraction.Focus()
+    }
 
-//    ExposedDropdownMenuBox(expanded = , onExpandedChange = ) {
-//        ExposedDropdownMenu(onDismissRequest = )
-//    }
+    val interactionSource = remember {
+        object : MutableInteractionSource {
+            override val interactions = MutableSharedFlow<Interaction>(
+                extraBufferCapacity = 1,
+                onBufferOverflow = BufferOverflow.DROP_OLDEST,
+            )
+
+            override suspend fun emit(interaction: Interaction) {
+                Log.e("Outlinetext", interaction.toString())
+                if (interaction is PressInteraction.Release) {
+
+                    expandedFlow.emit(ClickSources.FROM_TEXT_FIELD)
+
+                } else {
+                    // Nop. Focus is determined whether the menu is expanded or not.
+                    if (interaction is FocusInteraction) {
+
+                    } else {
+                        interactions.emit(interaction)
+//
+                    }
+                }
 
 
-//    LaunchedEffect(interactionSource) {
-//        interactionSource.interactions
-//            .collect {
-//                Log.e("interaction", it.toString())
-//                expanded = !expanded
-//            }
-//    }
+            }
 
-    LaunchedEffect(interactionSource, expanded) {
-        interactionSource.emit(
+            override fun tryEmit(interaction: Interaction): Boolean {
+                return interactions.tryEmit(interaction)
+            }
+        }
+    }
+
+
+    LaunchedEffect(key1 = expandedFlow) {
+        // We need to add a debounce to avoid the following behaviour
+        // 1-) The menu is expanded
+        // 2-) The user clicks in the text field in order to close the menu
+        // Because the popup is opened the onDismiss will be called (because the text does not
+        // belong to the popup) setting the expanded to false, now the click gets consumed
+        // in the text field, which inverses the expanded field (which is now false because we just
+        // clicked outside the menu) thus setting the expansion to true again.
+        expandedFlow.debounce(200).collect { source ->
+            expanded = when (source) {
+                ClickSources.FROM_MENU -> {
+                    false
+                }
+                ClickSources.FROM_TEXT_FIELD -> {
+                    !expanded
+                }
+
+
+            }
+
             if (expanded) {
-                currentFocus.value = FocusInteraction.Focus()
-                currentFocus.value
-
+                currentFocus = FocusInteraction.Focus()
+                interactionSource.interactions.emit(currentFocus)
 
             } else {
-                FocusInteraction.Unfocus(currentFocus.value)
+                interactionSource.interactions.emit(FocusInteraction.Unfocus(currentFocus))
             }
-        )
+        }
+
     }
+
+
+
+
+
 
     ExposedDropdownMenuStack(
         textField = {
             OutlinedTextField(
-                modifier = Modifier.clickable { expanded = !expanded },
                 value = selected.toString(),
                 onValueChange = {},
-                interactionSource = interactionSource,
                 readOnly = true,
+                interactionSource = interactionSource,
                 label = { Text("Instrument") },
                 trailingIcon = {
                     val rotation by animateFloatAsState(if (expanded) 180F else 0F)
-//                    IconButton(
-//                        modifier = Modifier.focusRequester(focusRequester),
-//                       onClick =  { expanded = !expanded }
-//                    ) {
                     Icon(
                         rememberVectorPainter(Icons.Default.ArrowDropDown),
                         contentDescription = "Dropdown Arrow",
                         Modifier.rotate(rotation),
                     )
-//                    }
                 }
             )
         }
@@ -83,9 +132,9 @@ fun <T> ExposedDropdownMenu(
             width = boxWidth,
             itemHeight = itemHeight,
             expanded = expanded,
-            onExpandChange = { expanded = !expanded },
+            onExpandChange = { expandedFlow.emit(ClickSources.FROM_TEXT_FIELD) },
             onItemClick = {
-                expanded = !expanded
+
             })
     }
 }
