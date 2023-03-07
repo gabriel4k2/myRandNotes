@@ -31,7 +31,7 @@ enum class ClickSources {
 fun <T> ExposedDropdownMenu(
     items: List<T>,
     selected: T,
-    onItemSelected: (String) -> Unit,
+    onItemSelected: (T) -> Unit,
 ) {
     var expandedFlow = remember { MutableSharedFlow<ClickSources>() }
     var expanded by remember { mutableStateOf(false) }
@@ -134,7 +134,8 @@ fun <T> ExposedDropdownMenu(
             expanded = expanded,
             onExpandChange = { expandedFlow.emit(ClickSources.FROM_TEXT_FIELD) },
             onItemClick = {
-
+                expandedFlow.emit(ClickSources.FROM_TEXT_FIELD)
+                onItemSelected(it)
             })
     }
 }

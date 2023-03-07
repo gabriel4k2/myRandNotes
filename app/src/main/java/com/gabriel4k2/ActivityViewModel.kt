@@ -43,4 +43,19 @@ class ActivityViewModel @Inject constructor(
 
     }
 
+    fun onNewInstrumentSelected(instrument: UIInstrument){
+
+        _uiState.update {
+            val matchedInstrument =
+                it.instruments.find { uiInstrument -> uiInstrument.name == instrument.name }
+            if (matchedInstrument != null) {
+                it.copy(currentInstrument = matchedInstrument)
+            } else{
+                it
+            }
+
+        }
+
+    }
+
 }

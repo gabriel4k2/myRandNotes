@@ -19,6 +19,7 @@ import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.gabriel4k2.ActivityViewModel
 import com.gabriel4k2.fluidsynthdemo.R
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.ui.customMenu.ExposedDropdownMenu
@@ -28,19 +29,18 @@ import kotlinx.coroutines.flow.filter
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SettingsSection(instrumentList: List<UIInstrument>, currentInstrument: UIInstrument) {
-    val interactionSource = remember { MutableInteractionSource() }
+fun SettingsSection(viewModel: ActivityViewModel, instrumentList: List<UIInstrument>, currentInstrument: UIInstrument) {
 
 
     Column(verticalArrangement =  Arrangement.spacedBy(20.dp)) {
-        InstrumentSelectionSection(instrumentList, currentInstrument)
+        InstrumentSelectionSection(viewModel , instrumentList, currentInstrument)
     }
 
 
 }
 
 @Composable
-fun InstrumentSelectionSection(instrumentList: List<UIInstrument>, currentInstrument: UIInstrument) {
+fun InstrumentSelectionSection(viewModel: ActivityViewModel , instrumentList: List<UIInstrument>, currentInstrument: UIInstrument) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)){
         Icon(
             painter=painterResource(id = R.drawable.ic_guitar_acoustic),
@@ -49,7 +49,7 @@ fun InstrumentSelectionSection(instrumentList: List<UIInstrument>, currentInstru
 
         )
 
-        ExposedDropdownMenu(items = instrumentList, selected = currentInstrument, onItemSelected = {})
+        ExposedDropdownMenu(items = instrumentList, selected = currentInstrument, onItemSelected = {viewModel.onNewInstrumentSelected(it)})
 
 
     }

@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
                                 margin = dimensions.noteDisplayerRadius + dimensions.largePadding
                             )
                         }) {
-                            SettingsSection(instrumentList = instrumentList, currentInstrument = currentInstrument)
+                            SettingsSection(viewModel = viewModel, instrumentList = instrumentList, currentInstrument = currentInstrument)
                         }
 
 

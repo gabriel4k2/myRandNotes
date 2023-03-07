@@ -37,7 +37,7 @@ fun <T> LazyDropDownMenu(
     width: Dp,
     itemHeight: Dp,
     expanded: Boolean,
-    onItemClick: (T) -> Unit,
+    onItemClick: suspend (T) -> Unit,
     onExpandChange: suspend () -> Unit,
 
     ) {
@@ -117,7 +117,7 @@ fun <T> LazyDropDownMenu(
                                 .height(itemHeight)
                                 .width(width),
                             onClick = {
-                                onItemClick(item)
+                                cScope.launch { onItemClick(item) }
 
                             }
                         ) {
