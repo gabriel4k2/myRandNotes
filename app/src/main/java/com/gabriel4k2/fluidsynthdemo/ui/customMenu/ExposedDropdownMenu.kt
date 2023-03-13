@@ -2,23 +2,19 @@ package com.gabriel4k2.fluidsynthdemo.ui.customMenu
 
 import android.util.Log
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.*
+import androidx.compose.foundation.layout.Row
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.SubcomposeLayout
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.debounce
 
 enum class ClickSources {
@@ -26,18 +22,31 @@ enum class ClickSources {
     FROM_MENU
 }
 
+enum class MenuArrangement {
+    Down,
+    OnTop
+}
+
 
 @Composable
 fun <T> ExposedDropdownMenu(
+    modifier: Modifier = Modifier,
     items: List<T>,
     selected: T,
     onItemSelected: (T) -> Unit,
+    arrangement: MenuArrangement = MenuArrangement.Down,
+    itemsPerScroll: Int = 3,
+    suffix: String = "ms"
 ) {
+
     var expandedFlow = remember { MutableSharedFlow<ClickSources>() }
     var expanded by remember { mutableStateOf(false) }
     var currentFocus = remember {
         FocusInteraction.Focus()
     }
+
+    val arrowRotation by animateFloatAsState(if (expanded) 180F else 0F)
+
 
     val interactionSource = remember {
         object : MutableInteractionSource {
@@ -47,7 +56,6 @@ fun <T> ExposedDropdownMenu(
             )
 
             override suspend fun emit(interaction: Interaction) {
-                Log.e("Outlinetext", interaction.toString())
                 if (interaction is PressInteraction.Release) {
 
                     expandedFlow.emit(ClickSources.FROM_TEXT_FIELD)
@@ -58,7 +66,6 @@ fun <T> ExposedDropdownMenu(
 
                     } else {
                         interactions.emit(interaction)
-//
                     }
                 }
 
@@ -109,20 +116,26 @@ fun <T> ExposedDropdownMenu(
 
 
     ExposedDropdownMenuStack(
+        arrangement = arrangement,
         textField = {
             OutlinedTextField(
                 value = selected.toString(),
                 onValueChange = {},
                 readOnly = true,
                 interactionSource = interactionSource,
-                label = { Text("Instrument") },
                 trailingIcon = {
-                    val rotation by animateFloatAsState(if (expanded) 180F else 0F)
-                    Icon(
-                        rememberVectorPainter(Icons.Default.ArrowDropDown),
-                        contentDescription = "Dropdown Arrow",
-                        Modifier.rotate(rotation),
-                    )
+
+                    Row(){
+                        if(suffix.isNotEmpty()){
+                            Text(suffix)
+                        }
+                        Icon(
+                            rememberVectorPainter(Icons.Default.ArrowDropDown),
+                            contentDescription = "Dropdown Arrow",
+                            Modifier.rotate(arrowRotation),
+                        )
+                    }
+
                 }
             )
         }
@@ -131,6 +144,7 @@ fun <T> ExposedDropdownMenu(
             items = items,
             width = boxWidth,
             itemHeight = itemHeight,
+            itemsPerScroll = itemsPerScroll,
             expanded = expanded,
             onExpandChange = { expandedFlow.emit(ClickSources.FROM_TEXT_FIELD) },
             onItemClick = {
@@ -143,8 +157,9 @@ fun <T> ExposedDropdownMenu(
 
 @Composable
 private fun ExposedDropdownMenuStack(
+    arrangement: MenuArrangement = MenuArrangement.Down,
     textField: @Composable () -> Unit,
-    dropdownMenu: @Composable (boxWidth: Dp, itemHeight: Dp) -> Unit
+    dropdownMenu: @Composable (boxWidth: Dp, itemHeight: Dp) -> Unit,
 ) {
     SubcomposeLayout { constraints ->
         val textFieldPlaceable =
@@ -154,7 +169,13 @@ private fun ExposedDropdownMenuStack(
         }.first().measure(constraints)
         layout(textFieldPlaceable.width, textFieldPlaceable.height) {
             textFieldPlaceable.placeRelative(0, 0)
-            dropdownPlaceable.placeRelative(0, textFieldPlaceable.height)
+            dropdownPlaceable.placeRelative(
+                0, if (arrangement == MenuArrangement.Down) {
+                    textFieldPlaceable.height
+                } else {
+                    0
+                }
+            )
         }
     }
 }

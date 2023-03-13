@@ -26,7 +26,6 @@ data class MainActivityUIState(
 
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
-    @ApplicationContext val context: Context,
     private val instrumentUseCase: InstrumentUseCase,
 ) : ViewModel(){
 

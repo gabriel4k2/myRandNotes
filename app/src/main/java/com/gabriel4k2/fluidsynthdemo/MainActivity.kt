@@ -94,12 +94,12 @@ class MainActivity : ComponentActivity() {
 
                         }
 
-                        Column(Modifier.constrainAs(settingsSection) {
+                        Column(Modifier.padding(horizontal = 20.dp).constrainAs(settingsSection) {
                             centerHorizontallyTo(parent)
 
                             top.linkTo(
                                 noteDisplayer.bottom,
-                                margin = dimensions.noteDisplayerRadius + dimensions.largePadding
+                                margin = dimensions.noteDisplayerRadius
                             )
                         }) {
                             SettingsSection(viewModel = viewModel, instrumentList = instrumentList, currentInstrument = currentInstrument)

@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -39,6 +38,7 @@ fun <T> LazyDropDownMenu(
     expanded: Boolean,
     onItemClick: suspend (T) -> Unit,
     onExpandChange: suspend () -> Unit,
+    itemsPerScroll: Int,
 
     ) {
 
@@ -108,7 +108,7 @@ fun <T> LazyDropDownMenu(
                     }
                     .width(width)
                     .background(MaterialTheme.colors.primaryVariant)
-                    .height(if (expanded) itemHeight * MaximumVisibleItems else 0.dp),
+                    .height(if (expanded) itemHeight * itemsPerScroll else 0.dp),
                     state = lazyListState,
                     flingBehavior = flingBehavior) {
                     items(items) { item ->
