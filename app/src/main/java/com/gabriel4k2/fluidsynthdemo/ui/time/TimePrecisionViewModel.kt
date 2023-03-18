@@ -1,6 +1,8 @@
 package com.gabriel4k2.fluidsynthdemo.ui.time
 
 import androidx.lifecycle.ViewModel
+import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsDispatcher
+import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,8 +31,10 @@ class TimePrecisionViewModel @Inject constructor(
 
 
 
-    fun onPrecisionSubmitted(precision: String) {
-        _uiState.update { it.copy(currentPrecision = AvailablePrecisions.values().first { precisionEnum -> precisionEnum.value == precision }) }
+    fun onPrecisionSubmitted(dispatcher: NoteGeneratorSettingsDispatcher, precision: String) {
+        val precision = AvailablePrecisions.values().first { precisionEnum -> precisionEnum.value == precision }
+        _uiState.update { it.copy(currentPrecision = precision) }
+        dispatcher.dispatchChangeEvent(SettingsChangeEvent.PrecisionChangeEvent(precision))
     }
 
 }

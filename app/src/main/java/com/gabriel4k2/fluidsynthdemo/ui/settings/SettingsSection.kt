@@ -18,6 +18,7 @@ import com.gabriel4k2.fluidsynthdemo.R
 import com.gabriel4k2.fluidsynthdemo.ui.customMenu.ExposedDropdownMenu
 import com.gabriel4k2.fluidsynthdemo.ui.customMenu.MenuArrangement
 import com.gabriel4k2.fluidsynthdemo.ui.model.UIInstrument
+import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalNoteGeneratorSettingsDispatcherProvider
 import com.gabriel4k2.fluidsynthdemo.ui.time.TimePrecisionForm
 
 @Composable
@@ -43,6 +44,7 @@ fun InstrumentSelectionSection(
     currentInstrument: UIInstrument
 ) {
 
+    val noteGeneratorSettingsDispatcher = LocalNoteGeneratorSettingsDispatcherProvider.current
     Column {
         Column(Modifier.height(48.dp), verticalArrangement = Arrangement.Center) {
             Text(
@@ -70,7 +72,7 @@ fun InstrumentSelectionSection(
             ExposedDropdownMenu(
                 items = instrumentList,
                 selected = currentInstrument,
-                onItemSelected = { viewModel.onNewInstrumentSelected(it) })
+                onItemSelected = { viewModel.onNewInstrumentSelected(noteGeneratorSettingsDispatcher, it) })
 
 
         }

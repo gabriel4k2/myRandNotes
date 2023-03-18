@@ -1,6 +1,8 @@
 package com.gabriel4k2.fluidsynthdemo.ui.time
 
 import androidx.lifecycle.ViewModel
+import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsDispatcher
+import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,11 +44,12 @@ class TimeFormViewModel @Inject constructor(
 
     }
 
-    fun onTimeSubmited(time: String) : String{
+    fun onTimeSubmited(dispatcher: NoteGeneratorSettingsDispatcher, time: String) : String{
         val previouslyOnError = uiSate.value.inErrorState
         val currentTime = uiSate.value.currentTime
         val finalTime = if(previouslyOnError){ currentTime } else { time}
         _uiState.update { it.copy(currentTime = finalTime,inErrorState = false) }
+        dispatcher.dispatchChangeEvent(SettingsChangeEvent.TimeChangeEvent(finalTime))
         return finalTime
     }
 

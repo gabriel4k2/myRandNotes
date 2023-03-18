@@ -10,10 +10,10 @@ NoteDispatcher::startNoteDispatching(JNIEnv *env, short synthSeqId, fluid_synth_
                                      dispatching_configs config) {
     // remove all queued events that were  possibly using another time interval/
     // instrument.
-    auto currentInstrument = config.instrument;
+    auto configCurrentInstrument = config.instrument;
     fluid_sequencer_remove_events(sequencer, -1, clientId, -1);
-    fluid_synth_program_select(synth, 0, sfId, currentInstrument.bankOffset,
-                               currentInstrument.patchNumber);
+    fluid_synth_program_select(synth, 0, sfId, configCurrentInstrument.bankOffset,
+                               configCurrentInstrument.patchNumber);
 
 
     now = fluid_sequencer_get_tick(sequencer);

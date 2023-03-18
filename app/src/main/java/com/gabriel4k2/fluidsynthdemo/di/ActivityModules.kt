@@ -17,7 +17,6 @@ abstract
 class ActivityModule {
 
 
-
     @Binds
     abstract fun bindInstrumentRepository(dispatchersProvider: InstrumentRepository):
             IInstrumentRepository
@@ -25,6 +24,8 @@ class ActivityModule {
     companion object {
         @Provides
         fun provideMoshi(): Moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
+
+
     }
 
 }
