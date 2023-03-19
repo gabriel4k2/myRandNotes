@@ -25,9 +25,15 @@ import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.ui.NoteDisplayer
 import com.gabriel4k2.fluidsynthdemo.ui.SettingsSection
 import com.gabriel4k2.fluidsynthdemo.ui.providers.*
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.components.ActivityRetainedComponent
 import kotlinx.coroutines.*
 import java.util.concurrent.Executors.newSingleThreadExecutor
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -35,8 +41,9 @@ class MainActivity : ComponentActivity() {
     private val viewModel: ActivityViewModel by viewModels()
 
     var noteName: MutableState<String>? = null
-    private val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
     private val audioThread = newSingleThreadExecutor()
+    val jniHandle = JNIHandle()
+
 
     init {
 
@@ -47,7 +54,6 @@ class MainActivity : ComponentActivity() {
     private external fun startFluidSynthEngine(sfAbsolutePath: String)
     private external fun startPlayingNotes(intervalInMs: Long, instrument: Instrument)
     private external fun pauseSynth()
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,81 +70,82 @@ class MainActivity : ComponentActivity() {
             noteName = remember { mutableStateOf("-") }
             AppTheme {
                 ThemeProvider {
-                    JNIFunctionsProvider(::startPlayingNotes, ::pauseSynth) {
-                        NoteGeneratorSettingsDispatcherProvider {
-
-                            val dimensions = LocalThemeProvider.current.dimensions
-                            viewModel.RetrieveInstrumentList()
-                            val uiState by viewModel.uiSate.collectAsState()
-                            val instrumentList = uiState.instruments
-                            val currentInstrument = uiState.currentInstrument
+                    NoteGeneratorSettingsDispatcherProvider(viewModel.settingsStorage, jniHandle ) {
 
 
+                        val dimensions = LocalThemeProvider.current.dimensions
+                        viewModel.RetrieveInstrumentList()
+                        val uiState by viewModel.uiSate.collectAsState()
+                        val instrumentList = uiState.instruments
+                        val currentInstrument = uiState.currentInstrument
 
-                            ConstraintLayout(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colors.background),
+
+
+                        ConstraintLayout(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(MaterialTheme.colors.background),
+                        ) {
+                            val (noteDisplayer, settingsSection, FAB) = createRefs()
+                            Column(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .constrainAs(noteDisplayer) {
+                                        top.linkTo(
+                                            parent.top,
+                                            margin = dimensions.noteDisplayerRadius + dimensions.noteDisplayerTopContainerPadding
+                                        )
+                                    }, horizontalAlignment = CenterHorizontally
                             ) {
-                                val (noteDisplayer, settingsSection, FAB) = createRefs()
-                                Column(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .constrainAs(noteDisplayer) {
-                                            top.linkTo(
-                                                parent.top,
-                                                margin = dimensions.noteDisplayerRadius + dimensions.noteDisplayerTopContainerPadding
-                                            )
-                                        }, horizontalAlignment = CenterHorizontally
-                                ) {
-                                    NoteDisplayer()
+                                NoteDisplayer()
 
-
-                                }
-
-                                Column(
-                                    Modifier.padding(horizontal = 20.dp)
-                                        .constrainAs(settingsSection) {
-                                            centerHorizontallyTo(parent)
-
-                                            top.linkTo(
-                                                noteDisplayer.bottom,
-                                                margin = dimensions.noteDisplayerRadius
-                                            )
-                                        }) {
-                                    SettingsSection(
-                                        viewModel = viewModel,
-                                        instrumentList = instrumentList,
-                                        currentInstrument = currentInstrument
-                                    )
-                                }
-
-
-
-                                ExtendedFloatingActionButton(
-                                    modifier = Modifier.constrainAs(FAB) {
-                                        centerHorizontallyTo(parent)
-                                        bottom.linkTo(
-                                            parent.bottom,
-                                            margin = 20.dp
-                                        )
-                                    },
-                                    icon = {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_music_note),
-                                            contentDescription = ""
-                                        )
-                                    },
-                                    text = { Text("CONFIGURE NOTE RANGE") },
-                                    onClick = {},
-                                    backgroundColor = MaterialTheme.colors.primary,
-                                    shape = RoundedCornerShape(16.dp)
-                                )
 
                             }
+
+                            Column(
+                                Modifier
+                                    .padding(horizontal = 20.dp)
+                                    .constrainAs(settingsSection) {
+                                        centerHorizontallyTo(parent)
+
+                                        top.linkTo(
+                                            noteDisplayer.bottom,
+                                            margin = dimensions.noteDisplayerRadius
+                                        )
+                                    }) {
+                                SettingsSection(
+                                    viewModel = viewModel,
+                                    instrumentList = instrumentList,
+                                    currentInstrument = currentInstrument
+                                )
+                            }
+
+
+
+                            ExtendedFloatingActionButton(
+                                modifier = Modifier.constrainAs(FAB) {
+                                    centerHorizontallyTo(parent)
+                                    bottom.linkTo(
+                                        parent.bottom,
+                                        margin = 20.dp
+                                    )
+                                },
+                                icon = {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.ic_music_note),
+                                        contentDescription = ""
+                                    )
+                                },
+                                text = { Text("CONFIGURE NOTE RANGE") },
+                                onClick = {},
+                                backgroundColor = MaterialTheme.colors.primary,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+
                         }
                     }
                 }
+
             }
 
 
@@ -151,6 +158,7 @@ class MainActivity : ComponentActivity() {
         pauseSynth()
     }
 
+    // Called from JNI
     fun onMidiNoteChanged(midiNumber: Int) {
         var _noteName = midiToNoteMap[midiNumber]
         if (_noteName != null) {
@@ -159,27 +167,17 @@ class MainActivity : ComponentActivity() {
 
     }
 
-
-}
-
-@Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!", fontSize = 24.sp)
-}
-
-@Composable
-fun InstrumentList(instruments: List<Instrument>) {
-    LazyRow {
-        items(items = instruments) {
-            Text(
-                text = "Instrument name ${it.name} type ${it.type} bank ${it.bankOffset}",
-                fontSize = 24.sp
-            )
-
+    inner class JNIHandle() : JNIInterface {
+        override fun startPlayingNotesHandle(intervalInMs: Long, instrument: Instrument) {
+            return startPlayingNotes(intervalInMs, instrument)
         }
 
+        override fun pauseSynthHandle() {
+            return pauseSynth()
+        }
 
     }
+
 }
 
 

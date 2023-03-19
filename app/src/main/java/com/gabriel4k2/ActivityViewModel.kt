@@ -5,9 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.ViewModel
 import com.gabriel4k2.fluidsynthdemo.R
+import com.gabriel4k2.fluidsynthdemo.data.SettingsStorage
 import com.gabriel4k2.fluidsynthdemo.domain.InstrumentUseCase
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
-import com.gabriel4k2.fluidsynthdemo.ui.model.UIInstrument
 import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsDispatcher
 import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
 import com.squareup.moshi.JsonAdapter
@@ -21,15 +21,17 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 data class MainActivityUIState(
-    val instruments: List<UIInstrument> = emptyList(),
-    val currentInstrument: UIInstrument = UIInstrument.EMPTY_INSTRUMENT
+    val instruments: List<Instrument> = emptyList(),
+    val currentInstrument: Instrument = Instrument.INITIAL_INSTRUMENT
 
 )
 
 @HiltViewModel
 class ActivityViewModel @Inject constructor(
     private val instrumentUseCase: InstrumentUseCase,
-) : ViewModel() {
+    val settingsStorage: SettingsStorage
+
+    ) : ViewModel() {
 
     private var _uiState: MutableStateFlow<MainActivityUIState> =
         MutableStateFlow(MainActivityUIState())
@@ -52,11 +54,11 @@ class ActivityViewModel @Inject constructor(
 
     fun onNewInstrumentSelected(
         dispatcher: NoteGeneratorSettingsDispatcher,
-        instrument: UIInstrument
+        instrument: Instrument
     ) {
         val uiState = uiSate.value
         val matchedInstrument =
-            uiState.instruments.find { uiInstrument -> uiInstrument.name == instrument.name }
+            uiState.instruments.find { _instrument -> _instrument.toString() == instrument.toString() }
 
         _uiState.update {
 

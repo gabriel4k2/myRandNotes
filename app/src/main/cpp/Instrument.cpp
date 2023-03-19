@@ -4,7 +4,7 @@
 #include "Instrument.h"
 
 instrument deserialize_instrument(JNIEnv *env, jobject _instrument) {
-    auto kotlinInsrumentClass = env->FindClass("com/gabriel4k2/fluidsynthdemo/data/Instrument");
+    auto kotlinInsrumentClass = env->FindClass("com/gabriel4k2/fluidsynthdemo/domain/model/Instrument");
     jfieldID patchNumberFieldID = env->GetFieldID(kotlinInsrumentClass, "patchNumber", "I");
     auto patchNumber = env->GetIntField(_instrument, patchNumberFieldID);
 

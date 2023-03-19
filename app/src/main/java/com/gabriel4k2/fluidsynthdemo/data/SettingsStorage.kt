@@ -1,16 +1,19 @@
 package com.gabriel4k2.fluidsynthdemo.data
 
+import android.content.Context
 import android.content.SharedPreferences
 import com.gabriel4k2.fluidsynthdemo.domain.model.NoteGenerationConfig
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
+import javax.inject.Singleton
 
-
-class SettingsStorage @Inject constructor(
-    private val preferences: SharedPreferences,
+class SettingsStorage  constructor(
+     val context: Context,
     private val moshi: Moshi
 ) {
+    private val preferences: SharedPreferences = context.getSharedPreferences("MyPref", 0)
 
     private val adapter: JsonAdapter<NoteGenerationConfig> =
         moshi.adapter(NoteGenerationConfig::class.java)

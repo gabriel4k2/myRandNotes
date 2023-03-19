@@ -28,7 +28,7 @@
 
 MyNotesEngine *engineHandle;
 jobject currentClass;
-
+using namespace std;
 //std::vector<instrument> MyNotesEngine::get_instruments_list() {
 //    fluid_sfont_t *sfont;
 //    fluid_preset_t *preset;
@@ -114,11 +114,16 @@ void MyNotesEngine::loadsoundfont(const char *sfFilePath) {
 
 void
 MyNotesEngine::start_playing_notes(unsigned int seqInMs, jobject currentInstrument, JNIEnv *env) {
+    vector<int> vect;
 
+    vect.push_back(36);
+    vect.push_back(48);
+    vect.push_back(60);
+    vect.push_back(72);
     auto instrument = deserialize_instrument(env, reinterpret_cast<jobject>(currentInstrument));
 
     (this->dispatcher)->startNoteDispatching(env, synthSeqID, synth, sfId,
-                                             dispatching_configs{seqInMs, instrument,});
+                                             dispatching_configs{seqInMs, instrument, vect});
 }
 
 MyNotesEngine::~MyNotesEngine() {

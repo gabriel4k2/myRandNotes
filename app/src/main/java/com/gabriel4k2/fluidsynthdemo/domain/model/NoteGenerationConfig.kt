@@ -1,6 +1,5 @@
 package com.gabriel4k2.fluidsynthdemo.domain.model
 
-import android.util.Log
 import com.gabriel4k2.fluidsynthdemo.ui.model.UINoteGenerationConfig
 import com.gabriel4k2.fluidsynthdemo.ui.time.AvailablePrecisions
 

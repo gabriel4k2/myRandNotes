@@ -24,7 +24,7 @@ public:
 
     ~NoteDispatcher();
 
-    void startNoteDispatching(JNIEnv *env, short synthSeqId, fluid_synth_t *synth, int sfId, dispatching_configs config);
+    void startNoteDispatching(JNIEnv *env, short synthSeqId, fluid_synth_t *synth, int sfId, const dispatching_configs& config);
 
 
 private:

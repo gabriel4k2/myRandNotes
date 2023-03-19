@@ -7,7 +7,7 @@
 
 void
 NoteDispatcher::startNoteDispatching(JNIEnv *env, short synthSeqId, fluid_synth_t *synth, int sfId,
-                                     dispatching_configs config) {
+                                     const dispatching_configs& config) {
     // remove all queued events that were  possibly using another time interval/
     // instrument.
     auto configCurrentInstrument = config.instrument;

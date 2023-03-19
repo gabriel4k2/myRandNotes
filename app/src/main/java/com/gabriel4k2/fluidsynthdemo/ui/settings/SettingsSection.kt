@@ -15,17 +15,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.gabriel4k2.ActivityViewModel
 import com.gabriel4k2.fluidsynthdemo.R
+import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.ui.customMenu.ExposedDropdownMenu
-import com.gabriel4k2.fluidsynthdemo.ui.customMenu.MenuArrangement
-import com.gabriel4k2.fluidsynthdemo.ui.model.UIInstrument
 import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalNoteGeneratorSettingsDispatcherProvider
 import com.gabriel4k2.fluidsynthdemo.ui.time.TimePrecisionForm
 
 @Composable
 fun SettingsSection(
     viewModel: ActivityViewModel,
-    instrumentList: List<UIInstrument>,
-    currentInstrument: UIInstrument
+    instrumentList: List<Instrument>,
+    currentInstrument: Instrument
 ) {
 
 
@@ -40,11 +39,10 @@ fun SettingsSection(
 @Composable
 fun InstrumentSelectionSection(
     viewModel: ActivityViewModel,
-    instrumentList: List<UIInstrument>,
-    currentInstrument: UIInstrument
+    instrumentList: List<Instrument>,
+    currentInstrument: Instrument
 ) {
-
-    val noteGeneratorSettingsDispatcher = LocalNoteGeneratorSettingsDispatcherProvider.current
+    val noteDispatcher = LocalNoteGeneratorSettingsDispatcherProvider.current
     Column {
         Column(Modifier.height(48.dp), verticalArrangement = Arrangement.Center) {
             Text(
@@ -72,7 +70,7 @@ fun InstrumentSelectionSection(
             ExposedDropdownMenu(
                 items = instrumentList,
                 selected = currentInstrument,
-                onItemSelected = { viewModel.onNewInstrumentSelected(noteGeneratorSettingsDispatcher, it) })
+                onItemSelected = { viewModel.onNewInstrumentSelected( noteDispatcher, it) })
 
 
         }

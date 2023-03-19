@@ -15,7 +15,43 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalThemeProvider
+import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsDispatcher
+import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
+import com.gabriel4k2.fluidsynthdemo.ui.time.AvailablePrecisions
+import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import javax.inject.Inject
+
+data class NoteDisplayerUIState(
+    val currentNote: String = "-"
+
+)
+
+@HiltViewModel
+class NoteDisplayerViewModel @Inject constructor(
+) : ViewModel() {
+
+    private var _uiState: MutableStateFlow<NoteDisplayerUIState> =
+        MutableStateFlow(NoteDisplayerUIState())
+    val uiSate: StateFlow<NoteDisplayerUIState> = _uiState
+
+    private val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
+
+
+    fun onNewNote(midiNumber: Int) {
+        var _noteName = midiToNoteMap[midiNumber]
+        if (_noteName != null) {
+            _uiState.update { it.copy(currentNote = _noteName) }
+        }
+
+    }
+}
+
 
 @Composable
 fun NoteDisplayer( currentNote:String = "C1") {

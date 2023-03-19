@@ -2,14 +2,16 @@ package com.gabriel4k2.fluidsynthdemo.ui.providers
 
 import android.util.Log
 import androidx.compose.runtime.*
+import com.gabriel4k2.fluidsynthdemo.MainActivity
 import com.gabriel4k2.fluidsynthdemo.data.SettingsStorage
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.domain.model.NoteGenerationConfig
-import com.gabriel4k2.fluidsynthdemo.ui.model.UIInstrument
 import com.gabriel4k2.fluidsynthdemo.ui.model.UINoteGenerationConfig
 import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
 import com.gabriel4k2.fluidsynthdemo.ui.time.AvailablePrecisions
+import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -18,15 +20,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-class NoteGeneratorSettingsDispatcher @Inject constructor(
-    private val scope: CoroutineScope,
-    private val jNIFunctionsProvider: JNIFunctionsHandle,
+class NoteGeneratorSettingsDispatcher  constructor(
+    val jniHandle : JNIInterface,
     settingsStorage: SettingsStorage
 ) {
-    private val precisionFlow: MutableSharedFlow<AvailablePrecisions> = MutableSharedFlow()
-    private val timeFlow: MutableSharedFlow<String> = MutableSharedFlow()
-    private val instrumentFlow: MutableSharedFlow<Instrument> = MutableSharedFlow()
-    val initialUINoteGenerationConfig =
+    private val precisionFlow: MutableSharedFlow<AvailablePrecisions> = MutableSharedFlow(replay = 1)
+    private val timeFlow: MutableSharedFlow<String> = MutableSharedFlow(replay = 1)
+    private val instrumentFlow: MutableSharedFlow<Instrument> = MutableSharedFlow(replay = 1)
+    private val initialUINoteGenerationConfig =
         settingsStorage.getSettingsOrDefaultToInitial().toUINoteGenerationConfig()
 
 
@@ -39,7 +40,8 @@ class NoteGeneratorSettingsDispatcher @Inject constructor(
 
     }
 
-    private suspend fun publishInitialConfig() {
+    private fun publishInitialConfig() {
+
         updateInstrument(initialUINoteGenerationConfig.instrument)
         updateTime(initialUINoteGenerationConfig.timeInSeconds)
         updatePrecision(initialUINoteGenerationConfig.precision)
@@ -47,20 +49,20 @@ class NoteGeneratorSettingsDispatcher @Inject constructor(
     }
 
     private fun updatePrecision(precision: AvailablePrecisions) {
-        scope.launch { precisionFlow.emit(precision) }
+        GlobalScope.launch { precisionFlow.emit(precision) }
     }
 
     private fun updateTime(time: String) {
-        scope.launch { timeFlow.emit(time) }
+        GlobalScope.launch { timeFlow.emit(time) }
     }
 
-    private fun updateInstrument(uiInstrument: UIInstrument) {
-        scope.launch { instrumentFlow.emit(uiInstrument.instrument) }
+    private fun updateInstrument(instrument: Instrument) {
+        GlobalScope.launch { instrumentFlow.emit(instrument) }
     }
 
     fun setupSettingsSChangeListener() {
-        scope.launch {
-
+        GlobalScope.launch {
+            publishInitialConfig()
 
             combine(
                 precisionFlow,
@@ -76,8 +78,10 @@ class NoteGeneratorSettingsDispatcher @Inject constructor(
                 )
 
             }.drop(1).debounce(1000).collect { configs ->
-                jNIFunctionsProvider.startPlayingNotes(configs.timeIntervalMs, configs.instrument)
+                jniHandle.startPlayingNotesHandle(configs.timeIntervalMs, configs.instrument)
             }
+
+
 
         }
     }
@@ -90,13 +94,11 @@ val LocalNoteGeneratorSettingsDispatcherProvider =
 
 
 @Composable
-fun NoteGeneratorSettingsDispatcherProvider(content: @Composable () -> Unit) {
-    val cScope = rememberCoroutineScope()
-    val jniFunctionsHandle = LocalJNITFunctionsProvider.current
-    val dispatcher = remember(cScope, jniFunctionsHandle) {
+fun NoteGeneratorSettingsDispatcherProvider(settingsStorage: SettingsStorage,  jniHandle: JNIInterface,   content: @Composable () -> Unit,) {
+    val dispatcher = remember{
         NoteGeneratorSettingsDispatcher(
-            cScope,
-            jniFunctionsHandle
+            jniHandle,
+            settingsStorage
         )
 
     }
