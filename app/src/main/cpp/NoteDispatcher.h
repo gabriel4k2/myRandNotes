@@ -20,12 +20,12 @@ typedef struct {
 
 class NoteDispatcher {
 public:
-    NoteDispatcher(JavaVM *vm, fluid_sequencer_t *sequencer, jobject mainActivityReference);
+    NoteDispatcher(JavaVM *vm,  jobject mainActivityReference);
 
     ~NoteDispatcher();
 
-    void startNoteDispatching(JNIEnv *env, short synthSeqId, fluid_synth_t *synth, int sfId, const dispatching_configs& config);
-
+    void startNoteDispatching(JNIEnv *env,  fluid_synth_t *synth, int sfId, const dispatching_configs& config);
+    void stopNoteDispatching();
 
 private:
     JNIEnv *audioThreadEnv;
@@ -38,7 +38,7 @@ private:
 
     bool isAttached = false;
     short clientId;
-    short synthSeqId;
+    short synthClientId;
     unsigned int now;
     unsigned int seqDurationMs;
 

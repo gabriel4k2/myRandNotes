@@ -15,6 +15,7 @@ public:
      ~MyNotesEngine();
 
     void loadsoundfont(const char *sfFilePath);
+    void pauseEngine();
     void start_playing_notes(unsigned int seqInMs, jobject currentInstrument, JNIEnv * env);
 
 

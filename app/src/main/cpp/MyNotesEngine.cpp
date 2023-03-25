@@ -83,7 +83,9 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_gabriel4k2_fluidsynthdemo_MainActivity_pauseSynth(JNIEnv *env, jobject thiz) {
     // TODO see if dispatcher is really destroyed
-    delete ((MyNotesEngine *) engineHandle)->dispatcher;
+
+    ((MyNotesEngine *) engineHandle)->pauseEngine();
+//     ((MyNotesEngine *) engineHandle)->dispatcher->stopNoteDispatching();
 
 }
 
@@ -93,18 +95,19 @@ MyNotesEngine::MyNotesEngine(JavaVM *vm, jobject mainActivityReference) {
     settings = new_fluid_settings();
     fluid_settings_setint(settings, "synth.reverb.active", 0);
     fluid_settings_setint(settings, "synth.chorus.active", 0);
+    fluid_settings_setint(settings, "synth.cpu-cores", 2);
     synth = new_fluid_synth(settings);
     adriver = new_fluid_audio_driver(settings, synth);
-    sequencer = new_fluid_sequencer2(0);
     this->vm = vm;
 
-
-    synthSeqID = fluid_sequencer_register_fluidsynth(sequencer, synth);
+//    sequencer = new_fluid_sequencer2(0);
+//
+//    synthSeqID = fluid_sequencer_register_fluidsynth(sequencer, synth);
 }
 
 void MyNotesEngine::create_dispatcher(
         jobject mainActivityReference) {
-    dispatcher = new NoteDispatcher(vm, sequencer, mainActivityReference);
+    dispatcher = new NoteDispatcher(vm, mainActivityReference);
 }
 
 void MyNotesEngine::loadsoundfont(const char *sfFilePath) {
@@ -122,7 +125,7 @@ MyNotesEngine::start_playing_notes(unsigned int seqInMs, jobject currentInstrume
     vect.push_back(72);
     auto instrument = deserialize_instrument(env, reinterpret_cast<jobject>(currentInstrument));
 
-    (this->dispatcher)->startNoteDispatching(env, synthSeqID, synth, sfId,
+    (this->dispatcher)->startNoteDispatching(env, synth, sfId,
                                              dispatching_configs{seqInMs, instrument, vect});
 }
 
@@ -132,6 +135,14 @@ MyNotesEngine::~MyNotesEngine() {
     delete_fluid_synth(synth);
 }
 
+void MyNotesEngine::pauseEngine() {
+    if (this->dispatcher != nullptr) {
+        delete this->dispatcher;
+        this->dispatcher = nullptr;
+    }
+
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startPlayingNotes(JNIEnv *env, jobject thiz,
@@ -139,9 +150,9 @@ Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startPlayingNotes(JNIEnv *env, j
                                                                   jobject instrument) {
 
     auto engine = ((MyNotesEngine *) engineHandle);
-    if (engine->dispatcher == nullptr) {
-        engine->create_dispatcher(currentClass);
-    }
+
+    engine->create_dispatcher(currentClass);
+
     engine->start_playing_notes(interval_in_ms,
                                 instrument, env);
 }
