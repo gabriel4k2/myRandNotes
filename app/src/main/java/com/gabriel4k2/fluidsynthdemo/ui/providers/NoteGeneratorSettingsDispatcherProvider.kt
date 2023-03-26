@@ -78,7 +78,7 @@ class NoteGeneratorSettingsDispatcher  constructor(
                     )
                 )
 
-            }.drop(1).debounce(1000).collectIndexed { index , configs ->
+            }.debounce(1000).collectIndexed { index , configs ->
                 // The first emission is from the initial load so we don't need to save it
                 if(index!= 0){
                     settingsStorage.saveSettings(configs)
