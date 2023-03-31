@@ -69,9 +69,6 @@ Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startFluidSynthEngine(JNIEnv *en
 
     engineHandle->loadsoundfont(sfFilePath);
 
-//    engineHandle = reinterpret_cast<MyNotesEngine *>(env->NewGlobalRef(
-//            reinterpret_cast<jobject>(engineHandle)));
-
 
 }
 
@@ -100,9 +97,6 @@ MyNotesEngine::MyNotesEngine(JavaVM *vm, jobject mainActivityReference) {
     adriver = new_fluid_audio_driver(settings, synth);
     this->vm = vm;
 
-//    sequencer = new_fluid_sequencer2(0);
-//
-//    synthSeqID = fluid_sequencer_register_fluidsynth(sequencer, synth);
 }
 
 void MyNotesEngine::create_dispatcher(
@@ -118,6 +112,8 @@ void MyNotesEngine::loadsoundfont(const char *sfFilePath) {
 void
 MyNotesEngine::start_playing_notes(unsigned int seqInMs, jobject currentInstrument, JNIEnv *env) {
     vector<int> vect;
+
+    this->create_dispatcher(currentClass);
 
     vect.push_back(36);
     vect.push_back(48);
@@ -151,7 +147,7 @@ Java_com_gabriel4k2_fluidsynthdemo_MainActivity_startPlayingNotes(JNIEnv *env, j
 
     auto engine = ((MyNotesEngine *) engineHandle);
 
-    engine->create_dispatcher(currentClass);
+    engine->pauseEngine();
 
     engine->start_playing_notes(interval_in_ms,
                                 instrument, env);
