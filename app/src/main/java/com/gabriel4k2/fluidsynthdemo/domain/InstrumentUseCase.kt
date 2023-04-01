@@ -7,8 +7,8 @@ class InstrumentUseCase @Inject constructor(val repository: IInstrumentRepositor
 
     /* Returns a pair containing the first instrument to be shown (in case the user has not
     * selected one) and the list itself. */
-    fun getOrderedAndProcessedInstrumentList(): Pair<Instrument, List<Instrument>> {
-        val instrumentList = repository.retriveInstrumentList()
+    fun getOrderedAndProcessedInstrumentList(): List<Instrument> {
+        val instrumentList = repository.retrieveInstrumentList()
         val groupedByType = instrumentList.groupBy { it.type }
 
         val processedInstrumentList = groupedByType.entries.fold(mutableListOf<Instrument>()) { acc, group ->
@@ -31,9 +31,9 @@ class InstrumentUseCase @Inject constructor(val repository: IInstrumentRepositor
 
 
         val  sortedInstrumentList = processedInstrumentList.sortedBy { it.toString() }
-        val firstInstrument = sortedInstrumentList.firstOrNull{ it.name.contains("Nylon")} ?: sortedInstrumentList.first()
+//        val firstInstrument = sortedInstrumentList.firstOrNull{ it.name.contains("Nylon")} ?: sortedInstrumentList.first()
 
-        return  Pair(firstInstrument, sortedInstrumentList)
+        return   sortedInstrumentList
 
     }
 }

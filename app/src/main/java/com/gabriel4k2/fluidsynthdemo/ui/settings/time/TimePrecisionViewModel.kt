@@ -50,9 +50,9 @@ class TimePrecisionViewModel @Inject constructor(
 
 
     fun onPrecisionSubmitted(dispatcher: NoteGeneratorSettingsController, precision: String) {
-        val precision = AvailablePrecisions.values().first { precisionEnum -> precisionEnum.value == precision }
-        _uiState.update { it.copy(currentPrecision = precision) }
-        dispatcher.dispatchChangeEvent(SettingsChangeEvent.PrecisionChangeEvent(precision))
+        val availablePrecisions = AvailablePrecisions.values().first { precisionEnum -> precisionEnum.value == precision }
+        _uiState.update { it.copy(currentPrecision = availablePrecisions) }
+        dispatcher.dispatchChangeEvent(SettingsChangeEvent.PrecisionChangeEvent(availablePrecisions))
     }
 
 }

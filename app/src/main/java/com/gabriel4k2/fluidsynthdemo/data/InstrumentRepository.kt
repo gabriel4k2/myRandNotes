@@ -13,7 +13,7 @@ import javax.inject.Inject
 class InstrumentRepository @Inject constructor(@ApplicationContext val context: Context,
                                                val moshiInstance: Moshi
 ) : IInstrumentRepository {
-    override fun retriveInstrumentList(): List<Instrument> {
+    override fun retrieveInstrumentList(): List<Instrument> {
         val instrumentsJson =
             context.resources.openRawResource(R.raw.instruments).bufferedReader(Charsets.UTF_8)
                 .use { it.readText() }

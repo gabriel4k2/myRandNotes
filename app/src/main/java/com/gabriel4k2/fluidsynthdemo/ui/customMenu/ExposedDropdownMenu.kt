@@ -37,7 +37,7 @@ fun <T> ExposedDropdownMenu(
     arrangement: MenuArrangement = MenuArrangement.Down,
     itemsPerScroll: Int = 3,
     enabled: Boolean = true,
-    suffix: String = "ms"
+    suffix: String = ""
 ) {
 
     var expandedFlow = remember { MutableSharedFlow<ClickSources>() }

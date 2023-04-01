@@ -33,12 +33,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun RowScope.TimeForm(viewModel: TimeFormViewModel = hiltViewModel()) {
 
+    viewModel.SetupViewModel()
     val uiState by viewModel.uiSate.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
+    var currentTime = uiState.currentTime
     val noteGeneratorSettingsDispatcher = LocalNoteGeneratorSettingsDispatcherProvider.current
-    var pendingTime = uiState.currentTime
 
-    viewModel.SetupViewModel()
 
     var currentFocus = remember {
         mutableStateOf(FocusInteraction.Focus())
@@ -50,7 +50,7 @@ fun RowScope.TimeForm(viewModel: TimeFormViewModel = hiltViewModel()) {
     val focusSaverInteractionSource = FocusOnPressInteractionSource(currentFocus)
 
 
-//    var pendingTime by remember { mutableStateOf(currentTime) }
+    var pendingTime by remember(currentTime) { mutableStateOf(currentTime) }
 
     val inErrorState = uiState.inErrorState
 
@@ -59,9 +59,9 @@ fun RowScope.TimeForm(viewModel: TimeFormViewModel = hiltViewModel()) {
             mocked = "0",
             isLoading = pendingTime == TimeInSeconds.UNKNOWN,
             value = pendingTime.value,
-            content = { data, isLoading ->
+            content = { _, isLoading ->
                 OutlinedTextField(
-                    value = data,
+                    value = pendingTime.value,
                     onValueChange = {
                         if (isLoading) {
                         } else {

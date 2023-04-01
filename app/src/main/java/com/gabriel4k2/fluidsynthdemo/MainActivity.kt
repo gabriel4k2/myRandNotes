@@ -7,8 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -16,30 +14,22 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.compose.AppTheme
-import com.gabriel4k2.ActivityViewModel
+import com.gabriel4k2.InstrumentViewModel
 import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.ui.NoteDisplayer
 import com.gabriel4k2.fluidsynthdemo.ui.PlaybackController
 import com.gabriel4k2.fluidsynthdemo.ui.SettingsSection
 import com.gabriel4k2.fluidsynthdemo.ui.providers.*
-import dagger.Binds
-import dagger.Module
-import dagger.Provides
-import dagger.hilt.InstallIn
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.components.ActivityRetainedComponent
-import kotlinx.coroutines.*
 import java.util.concurrent.Executors.newSingleThreadExecutor
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: ActivityViewModel by viewModels()
+    private val viewModel: InstrumentViewModel by viewModels()
 
     var noteName: MutableState<String>? = null
     val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
@@ -79,10 +69,6 @@ class MainActivity : ComponentActivity() {
 
                                 val dimensions = LocalThemeProvider.current.dimensions
 
-                                viewModel.RetrieveInstrumentList()
-                                val uiState by viewModel.uiSate.collectAsState()
-                                val instrumentList = uiState.instruments
-                                val currentInstrument = uiState.currentInstrument
 
 
                                 ConstraintLayout(
@@ -119,9 +105,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }) {
                                         SettingsSection(
-                                            viewModel = viewModel,
-                                            instrumentList = instrumentList,
-                                            currentInstrument = currentInstrument
+
                                         )
                                     }
 

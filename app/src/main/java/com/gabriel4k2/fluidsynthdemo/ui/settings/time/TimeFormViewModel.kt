@@ -47,21 +47,20 @@ class TimeFormViewModel @Inject constructor() : ViewModel() {
 
     fun onTimeInputted(time: String): String {
 
-        val twoDigitsTime = try {
-            val timeInt = time.toInt()
+        val firstTwoDigits = time.take(2)
+        try {
+            val timeInt = firstTwoDigits.toInt()
             if (timeInt == 0) {
                 _uiState.update { it.copy(inErrorState = true) }
             } else {
                 _uiState.update { it.copy(inErrorState = false) }
 
             }
-            time
         } catch (e: Exception) {
             _uiState.update { it.copy(inErrorState = true) }
-            time
-        }.take(2)
+        }
 
-        return twoDigitsTime
+        return firstTwoDigits
 
 
     }

@@ -1,11 +1,14 @@
 package com.gabriel4k2
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import com.gabriel4k2.fluidsynthdemo.data.SettingsStorage
 import com.gabriel4k2.fluidsynthdemo.domain.InstrumentUseCase
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
+import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalSoundEngineProvider
 import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsController
 import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,31 +17,48 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
-data class MainActivityUIState(
+data class InstrumentUIState(
     val instruments: List<Instrument> = emptyList(),
-    val currentInstrument: Instrument = Instrument.INITIAL_INSTRUMENT
+    val currentInstrument: Instrument = Instrument.UNKNOWN
 
 )
 
 @HiltViewModel
-class ActivityViewModel @Inject constructor(
+class InstrumentViewModel @Inject constructor(
     private val instrumentUseCase: InstrumentUseCase,
     val settingsStorage: SettingsStorage
 
     ) : ViewModel() {
 
-    private var _uiState: MutableStateFlow<MainActivityUIState> =
-        MutableStateFlow(MainActivityUIState())
-    val uiSate: StateFlow<MainActivityUIState> = _uiState
+    private var _uiState: MutableStateFlow<InstrumentUIState> =
+        MutableStateFlow(InstrumentUIState())
+    val uiSate: StateFlow<InstrumentUIState> = _uiState
+
 
     @Composable
-    fun RetrieveInstrumentList() {
+    fun SetupViewModel() {
+        RetrieveInstrumentList()
+        val engine = LocalSoundEngineProvider.current
+        val engineState = engine.engineState.collectAsState().value
+        val currentInstrument = engineState.noteGenerationConfig.instrument
+        LaunchedEffect(key1 = currentInstrument) {
+
+            _uiState.update {
+                it.copy(
+                    currentInstrument = currentInstrument
+                )
+            }
+        }
+    }
+
+
+    @Composable
+    private fun RetrieveInstrumentList() {
         LaunchedEffect(key1 = true) {
-            val (firstInstrument, instrumentList) = instrumentUseCase.getOrderedAndProcessedInstrumentList()
+            val  instrumentList = instrumentUseCase.getOrderedAndProcessedInstrumentList()
             _uiState.update {
                 it.copy(
                     instruments = instrumentList,
-                    currentInstrument = firstInstrument
                 )
             }
 
