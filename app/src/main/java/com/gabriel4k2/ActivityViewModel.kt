@@ -1,20 +1,14 @@
 package com.gabriel4k2
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.ViewModel
-import com.gabriel4k2.fluidsynthdemo.R
 import com.gabriel4k2.fluidsynthdemo.data.SettingsStorage
 import com.gabriel4k2.fluidsynthdemo.domain.InstrumentUseCase
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
-import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsDispatcher
+import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsController
 import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -53,7 +47,7 @@ class ActivityViewModel @Inject constructor(
     }
 
     fun onNewInstrumentSelected(
-        dispatcher: NoteGeneratorSettingsDispatcher,
+        dispatcher: NoteGeneratorSettingsController,
         instrument: Instrument
     ) {
         val uiState = uiSate.value

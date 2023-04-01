@@ -1,35 +1,34 @@
 package com.gabriel4k2.fluidsynthdemo.ui.providers
 
-import android.net.wifi.p2p.WifiP2pManager.ChannelListener
-import android.util.Log
 import androidx.compose.runtime.*
-import com.gabriel4k2.fluidsynthdemo.MainActivity
 import com.gabriel4k2.fluidsynthdemo.data.SettingsStorage
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.domain.model.NoteGenerationConfig
+import com.gabriel4k2.fluidsynthdemo.ui.model.AvailablePrecisions
+import com.gabriel4k2.fluidsynthdemo.ui.model.TimeInSeconds
 import com.gabriel4k2.fluidsynthdemo.ui.model.UINoteGenerationConfig
 import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
-import com.gabriel4k2.fluidsynthdemo.ui.time.AvailablePrecisions
-import dagger.hilt.android.qualifiers.ActivityContext
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 
-class NoteGeneratorSettingsDispatcher  constructor(
+class NoteGeneratorSettingsController  constructor(
     val coroutineScope: CoroutineScope,
     val settingsStorage: SettingsStorage
 ) {
     private val precisionFlow: MutableSharedFlow<AvailablePrecisions> = MutableSharedFlow(replay = 1)
-    private val timeFlow: MutableSharedFlow<String> = MutableSharedFlow(replay = 1)
+    private val timeFlow: MutableSharedFlow<TimeInSeconds> = MutableSharedFlow(replay = 1)
     private val instrumentFlow: MutableSharedFlow<Instrument> = MutableSharedFlow(replay = 1)
     private val initialUINoteGenerationConfig =
         settingsStorage.getSettingsOrDefaultToInitial().toUINoteGenerationConfig()
 
-    var currentConfig = Channel<NoteGenerationConfig>(capacity =  Channel.CONFLATED)
+    var dispatchedConfig = Channel<NoteGenerationConfig>(capacity =  Channel.CONFLATED)
 
 
     fun dispatchChangeEvent(event: SettingsChangeEvent) {
@@ -38,15 +37,12 @@ class NoteGeneratorSettingsDispatcher  constructor(
             is SettingsChangeEvent.TimeChangeEvent -> updateTime(event.time)
             is SettingsChangeEvent.InstrumentChangeEvent -> updateInstrument(event.instrument)
         }
-
     }
 
-    private fun publishInitialConfig() {
-
+    private fun publishStoredConfig() {
         updateInstrument(initialUINoteGenerationConfig.instrument)
-        updateTime(initialUINoteGenerationConfig.timeInSeconds)
+        updateTime(initialUINoteGenerationConfig.timeInSeconds.value)
         updatePrecision(initialUINoteGenerationConfig.precision)
-
     }
 
     private fun updatePrecision(precision: AvailablePrecisions) {
@@ -54,7 +50,7 @@ class NoteGeneratorSettingsDispatcher  constructor(
     }
 
     private fun updateTime(time: String) {
-        coroutineScope.launch { timeFlow.emit(time) }
+        coroutineScope.launch { timeFlow.emit(TimeInSeconds(time)) }
     }
 
     private fun updateInstrument(instrument: Instrument) {
@@ -63,8 +59,8 @@ class NoteGeneratorSettingsDispatcher  constructor(
 
     fun setupSettingsSChangeListener() {
         coroutineScope.launch {
-            publishInitialConfig()
-
+            delay(5000)
+            publishStoredConfig()
             combine(
                 precisionFlow,
                 timeFlow,
@@ -77,35 +73,24 @@ class NoteGeneratorSettingsDispatcher  constructor(
                         instrument
                     )
                 )
-
             }.debounce(1000).collectIndexed { index , configs ->
-                // The first emission is from the initial load so we don't need to save it
                 if(index!= 0){
                     settingsStorage.saveSettings(configs)
-
                 }
-                currentConfig.send(configs)
-//                jniHandle.startPlayingNotesHandle(configs.timeIntervalMs, configs.instrument)
+                dispatchedConfig.send(configs)
             }
-
-
-
         }
     }
-
-
-
 }
 
 val LocalNoteGeneratorSettingsDispatcherProvider =
-    compositionLocalOf<NoteGeneratorSettingsDispatcher> { error("No active user found!") }
-
+    compositionLocalOf<NoteGeneratorSettingsController> { error("No active user found!") }
 
 @Composable
 fun NoteGeneratorSettingsDispatcherProvider(settingsStorage: SettingsStorage,    content: @Composable () -> Unit,) {
     val cScope = rememberCoroutineScope()
     val dispatcher = remember(cScope){
-        NoteGeneratorSettingsDispatcher(
+        NoteGeneratorSettingsController(
             settingsStorage = settingsStorage,
             coroutineScope = cScope
         )
@@ -119,5 +104,4 @@ fun NoteGeneratorSettingsDispatcherProvider(settingsStorage: SettingsStorage,   
     ) {
         content()
     }
-
 }

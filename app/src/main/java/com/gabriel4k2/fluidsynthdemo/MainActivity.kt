@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: ActivityViewModel by viewModels()
 
     var noteName: MutableState<String>? = null
+    val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
     private val audioThread = newSingleThreadExecutor()
     val jniHandle = JNIHandle()
 
@@ -71,84 +72,86 @@ class MainActivity : ComponentActivity() {
             noteName = remember { mutableStateOf("-") }
             AppTheme {
                 ThemeProvider {
-                    NoteGeneratorSettingsDispatcherProvider(settingsStorage = viewModel.settingsStorage) {
-                        SoundEngineProvider(jniInterface = jniHandle) {
+                    ShimmerProvider {
+                        NoteGeneratorSettingsDispatcherProvider(settingsStorage = viewModel.settingsStorage) {
+                            SoundEngineProvider(jniInterface = jniHandle) {
 
 
-                            val dimensions = LocalThemeProvider.current.dimensions
+                                val dimensions = LocalThemeProvider.current.dimensions
 
-                            viewModel.RetrieveInstrumentList()
-                            val uiState by viewModel.uiSate.collectAsState()
-                            val instrumentList = uiState.instruments
-                            val currentInstrument = uiState.currentInstrument
+                                viewModel.RetrieveInstrumentList()
+                                val uiState by viewModel.uiSate.collectAsState()
+                                val instrumentList = uiState.instruments
+                                val currentInstrument = uiState.currentInstrument
 
 
-                            ConstraintLayout(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colors.background),
-                            ) {
-                                val (noteDisplayer, settingsSection, FAB) = createRefs()
-                                Column(
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .constrainAs(noteDisplayer) {
-                                            top.linkTo(
-                                                parent.top,
-                                                margin = dimensions.noteDisplayerRadius + dimensions.noteDisplayerTopContainerPadding
-                                            )
-                                        }, horizontalAlignment = CenterHorizontally
+                                ConstraintLayout(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(MaterialTheme.colors.background),
                                 ) {
-                                    NoteDisplayer()
-                                    PlaybackController()
+                                    val (noteDisplayer, settingsSection, FAB) = createRefs()
+                                    Column(
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .constrainAs(noteDisplayer) {
+                                                top.linkTo(
+                                                    parent.top,
+                                                    margin = dimensions.noteDisplayerRadius + dimensions.noteDisplayerTopContainerPadding
+                                                )
+                                            }, horizontalAlignment = CenterHorizontally
+                                    ) {
+                                        NoteDisplayer(noteName!!.value)
+                                        PlaybackController()
 
 
-                                }
+                                    }
 
-                                Column(
-                                    Modifier
-                                        .padding(horizontal = 20.dp)
-                                        .constrainAs(settingsSection) {
+                                    Column(
+                                        Modifier
+                                            .padding(horizontal = 20.dp)
+                                            .constrainAs(settingsSection) {
+                                                centerHorizontallyTo(parent)
+
+                                                top.linkTo(
+                                                    noteDisplayer.bottom,
+                                                    margin = dimensions.noteDisplayerRadius
+                                                )
+                                            }) {
+                                        SettingsSection(
+                                            viewModel = viewModel,
+                                            instrumentList = instrumentList,
+                                            currentInstrument = currentInstrument
+                                        )
+                                    }
+
+
+
+                                    ExtendedFloatingActionButton(
+                                        modifier = Modifier.constrainAs(FAB) {
                                             centerHorizontallyTo(parent)
-
-                                            top.linkTo(
-                                                noteDisplayer.bottom,
-                                                margin = dimensions.noteDisplayerRadius
+                                            bottom.linkTo(
+                                                parent.bottom,
+                                                margin = 20.dp
                                             )
-                                        }) {
-                                    SettingsSection(
-                                        viewModel = viewModel,
-                                        instrumentList = instrumentList,
-                                        currentInstrument = currentInstrument
+                                        },
+                                        icon = {
+                                            Icon(
+                                                painter = painterResource(id = R.drawable.ic_music_note),
+                                                contentDescription = ""
+                                            )
+                                        },
+                                        text = { Text("CONFIGURE NOTE RANGE") },
+                                        onClick = {},
+                                        backgroundColor = MaterialTheme.colors.primary,
+                                        shape = RoundedCornerShape(16.dp)
                                     )
+
                                 }
-
-
-
-                                ExtendedFloatingActionButton(
-                                    modifier = Modifier.constrainAs(FAB) {
-                                        centerHorizontallyTo(parent)
-                                        bottom.linkTo(
-                                            parent.bottom,
-                                            margin = 20.dp
-                                        )
-                                    },
-                                    icon = {
-                                        Icon(
-                                            painter = painterResource(id = R.drawable.ic_music_note),
-                                            contentDescription = ""
-                                        )
-                                    },
-                                    text = { Text("CONFIGURE NOTE RANGE") },
-                                    onClick = {},
-                                    backgroundColor = MaterialTheme.colors.primary,
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-
                             }
                         }
-                    }
 
+                    }
                 }
             }
 
@@ -163,8 +166,7 @@ class MainActivity : ComponentActivity() {
 
     // Called from JNI
     fun onMidiNoteChanged(midiNumber: Int) {
-//        var _noteName = midiToNoteMap[midiNumber]
-        var _noteName = "oi"
+        var _noteName = midiToNoteMap[midiNumber]
         if (_noteName != null) {
             noteName?.value = _noteName
         }

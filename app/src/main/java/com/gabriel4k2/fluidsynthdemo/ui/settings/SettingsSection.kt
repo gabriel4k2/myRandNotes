@@ -18,7 +18,7 @@ import com.gabriel4k2.fluidsynthdemo.R
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.ui.customMenu.ExposedDropdownMenu
 import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalNoteGeneratorSettingsDispatcherProvider
-import com.gabriel4k2.fluidsynthdemo.ui.time.TimePrecisionForm
+import com.gabriel4k2.fluidsynthdemo.ui.settings.time.TimePrecisionForm
 
 @Composable
 fun SettingsSection(
@@ -120,7 +120,6 @@ fun TempoSelectionSection() {
                 )
 
             TimeForm()
-
             TimePrecisionForm()
 
         }

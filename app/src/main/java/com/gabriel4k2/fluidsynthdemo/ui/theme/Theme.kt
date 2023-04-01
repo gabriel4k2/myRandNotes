@@ -19,7 +19,6 @@ private val LightColors = lightColors(
 
 @Composable
 fun AppTheme(
-  useDarkTheme: Boolean = isSystemInDarkTheme(),
   content: @Composable() () -> Unit
 ) {
   val colors = LightColors

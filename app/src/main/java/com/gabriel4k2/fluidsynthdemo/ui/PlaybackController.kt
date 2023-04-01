@@ -13,8 +13,8 @@ import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalSoundEngineProvider
 @Composable
 fun PlaybackController() {
     val engine = LocalSoundEngineProvider.current
-    val playbackStateState = engine.playbackState.collectAsState()
-    val playbackState = playbackStateState.value
+    val engineState = engine.engineState.collectAsState()
+    val playbackState = engineState.value?.playbackState
     val icon = if (playbackState == SoundEnginePlaybackState.PLAYING) {
         R.drawable.ic_stop
     } else {
@@ -23,11 +23,17 @@ fun PlaybackController() {
 
     val commandToIssue =  if (playbackState == SoundEnginePlaybackState.PLAYING) {
         SoundEnginePlaybackState.PAUSED
-    } else {
+    } else if( playbackState == SoundEnginePlaybackState.PAUSED){
         SoundEnginePlaybackState.PLAYING
+    } else {
+        null
     }
 
-    IconButton(onClick = { engine.changePlaybackState(commandToIssue)}) {
+    IconButton(enabled = playbackState != null, onClick = {
+        if (commandToIssue != null) {
+            engine.changePlaybackState(commandToIssue)
+        }
+    }) {
             Icon(painter = painterResource(id = icon), contentDescription = "")
 
     }

@@ -40,10 +40,15 @@ data class Instrument(
             type = "guitar",
             patchNumber = 24,
             name = "Nylon Guitar",
+            bankOffset = 0
+        )
+
+        val UNKNOWN = Instrument(
+            type = "-",
+            patchNumber = -1,
+            name = "-",
             bankOffset = 0,
             isUniqueType = false
         )
-
-
     }
 }

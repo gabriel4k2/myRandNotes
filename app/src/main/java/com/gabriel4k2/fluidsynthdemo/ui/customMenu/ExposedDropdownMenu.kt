@@ -36,6 +36,7 @@ fun <T> ExposedDropdownMenu(
     onItemSelected: (T) -> Unit,
     arrangement: MenuArrangement = MenuArrangement.Down,
     itemsPerScroll: Int = 3,
+    enabled: Boolean = true,
     suffix: String = "ms"
 ) {
 
@@ -110,23 +111,20 @@ fun <T> ExposedDropdownMenu(
 
     }
 
-
-
-
-
-
     ExposedDropdownMenuStack(
         arrangement = arrangement,
         textField = {
             OutlinedTextField(
+                modifier = modifier,
                 value = selected.toString(),
                 onValueChange = {},
                 readOnly = true,
+                enabled = enabled,
                 interactionSource = interactionSource,
                 trailingIcon = {
 
-                    Row(){
-                        if(suffix.isNotEmpty()){
+                    Row() {
+                        if (suffix.isNotEmpty()) {
                             Text(suffix)
                         }
                         Icon(
@@ -179,5 +177,7 @@ private fun ExposedDropdownMenuStack(
         }
     }
 }
+
+
 
 private enum class ExposedDropdownMenuSlot { TextField, Dropdown }
