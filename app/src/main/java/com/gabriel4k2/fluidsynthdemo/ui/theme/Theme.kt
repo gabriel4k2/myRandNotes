@@ -5,6 +5,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.gabriel4k2.fluidsynthdemo.ui.theme.Typography
 
 
 private val LightColors = lightColors(
@@ -25,6 +26,8 @@ fun AppTheme(
 
   MaterialTheme(
     colors = colors,
-    content = content
+    content = content,
+    typography = Typography
+
   )
 }

@@ -1,5 +1,15 @@
 package com.gabriel4k2.fluidsynthdemo.utils
 
+import com.gabriel4k2.fluidsynthdemo.domain.model.Chord
+import com.gabriel4k2.fluidsynthdemo.domain.model.Note
+import com.gabriel4k2.fluidsynthdemo.domain.model.Octave
+
+
+typealias MidiToNoteMap = HashMap<Int, Note>
+
+fun MidiToNoteMap.naturalMusicOrder() : List<Note>{
+    return this.values.sortedWith( compareBy<Note> { it.chord  }.thenBy { it.octave })
+}
 
 object NoteUtils {
 
@@ -19,35 +29,18 @@ object NoteUtils {
      */
 
 
-    fun generateMidiNumberToNoteNameMap(): Map<Int, String> {
-        val midiToNoteMap = HashMap<Int, String>()
+    fun generateMidiNumberToNoteNameMap(): MidiToNoteMap {
+        val chord = Chord.orderedChords()
 
-        for (i in 0..83) {
-
-            val note = when (i % 12) {
-                0 -> "C"
-                1 -> "C#"
-                2 -> "D"
-                3 -> "D#"
-                4 -> "E"
-                5 -> "F"
-                6 -> "F#"
-                7 -> "G"
-                8 -> "G#"
-                9 -> "A"
-                10 -> "A#"
-                11 -> "B"
-                else -> "C"
-
+        val octaves = Octave.orderedOctaves()
+        val midiToNoteMap = MidiToNoteMap()
+        chord.forEachIndexed { chordIndex, chord ->
+            octaves.forEachIndexed { octaveIndex, octave ->
+                val index = 12 * octaveIndex + chordIndex
+                midiToNoteMap[index] = Note(chord, octave)
 
             }
-
-            val octave = (i/12).toString()
-
-            midiToNoteMap[i] = note+octave
-
         }
-
         return midiToNoteMap
     }
 

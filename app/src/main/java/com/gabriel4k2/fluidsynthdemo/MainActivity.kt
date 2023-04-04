@@ -1,6 +1,7 @@
 package com.gabriel4k2.fluidsynthdemo
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +13,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
@@ -38,9 +40,7 @@ class MainActivity : ComponentActivity() {
 
 
     init {
-
         System.loadLibrary("fluidsynthdemo")
-
     }
 
     private external fun startFluidSynthEngine(sfAbsolutePath: String)
@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
+            val context = LocalContext.current
             noteName = remember { mutableStateOf("-") }
             AppTheme {
                 ThemeProvider {
@@ -66,10 +67,7 @@ class MainActivity : ComponentActivity() {
                         NoteGeneratorSettingsDispatcherProvider(settingsStorage = viewModel.settingsStorage) {
                             SoundEngineProvider(jniInterface = jniHandle) {
 
-
                                 val dimensions = LocalThemeProvider.current.dimensions
-
-
 
                                 ConstraintLayout(
                                     modifier = Modifier
@@ -126,7 +124,16 @@ class MainActivity : ComponentActivity() {
                                             )
                                         },
                                         text = { Text("CONFIGURE NOTE RANGE") },
-                                        onClick = {},
+                                        onClick = {
+                                            val intent =  Intent(
+                                                context,
+                                                NoteRangePickerActivity::class.java
+                                            )
+                                            intent.putExtra("notes", midiToNoteMap)
+                                            context.startActivity(
+                                                intent
+                                            )
+                                        },
                                         backgroundColor = MaterialTheme.colors.primary,
                                         shape = RoundedCornerShape(16.dp)
                                     )
@@ -152,7 +159,7 @@ class MainActivity : ComponentActivity() {
     fun onMidiNoteChanged(midiNumber: Int) {
         var _noteName = midiToNoteMap[midiNumber]
         if (_noteName != null) {
-            noteName?.value = _noteName
+            noteName?.value = _noteName.toString()
         }
 
     }

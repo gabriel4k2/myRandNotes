@@ -33,13 +33,13 @@ class NoteDisplayerViewModel @Inject constructor(
     private val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
 
 
-    fun onNewNote(midiNumber: Int) {
-        var _noteName = midiToNoteMap[midiNumber]
-        if (_noteName != null) {
-            _uiState.update { it.copy(currentNote = _noteName) }
-        }
-
-    }
+//    fun onNewNote(midiNumber: Int) {
+//        var _noteName = midiToNoteMap[midiNumber]
+//        if (_noteName != null) {
+//            _uiState.update { it.copy(currentNote = _noteName) }
+//        }
+//
+//    }
 }
 
 
