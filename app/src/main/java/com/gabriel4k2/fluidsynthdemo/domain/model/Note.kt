@@ -7,7 +7,9 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class Note(
     val chord : Chord,
-    val octave: Octave
+    val octave: Octave,
+    val selected: Boolean,
+    val midiNumber: Int
 ) : Parcelable {
     override fun toString(): String {
         return chord.value+octave.value

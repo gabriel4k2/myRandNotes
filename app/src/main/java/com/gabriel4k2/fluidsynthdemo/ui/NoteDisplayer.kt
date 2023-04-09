@@ -30,7 +30,6 @@ class NoteDisplayerViewModel @Inject constructor(
         MutableStateFlow(NoteDisplayerUIState())
     val uiSate: StateFlow<NoteDisplayerUIState> = _uiState
 
-    private val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
 
 
 //    fun onNewNote(midiNumber: Int) {

@@ -70,7 +70,8 @@ class NoteGeneratorSettingsController  constructor(
                     UINoteGenerationConfig(
                         availablePrecisions,
                         timeInSeconds,
-                        instrument
+                        instrument,
+                        emptyList()
                     )
                 )
             }.debounce(1000).collectIndexed { index , configs ->

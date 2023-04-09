@@ -14,7 +14,7 @@
         android:theme="@style/Theme.Fluidsynthdemo"
         tools:targetApi="31">
         <activity
-            android:name=".NoteRangePickerActivity"
+            android:name=".ui.noteRangePicker.NoteRangePickerActivity"
             android:exported="false"
             android:label="noterangerpicker"
             android:theme="@style/Theme.Fluidsynthdemo">

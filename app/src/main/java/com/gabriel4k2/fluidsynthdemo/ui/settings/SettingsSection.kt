@@ -20,16 +20,11 @@ import com.gabriel4k2.fluidsynthdemo.ui.settings.time.TimePrecisionMenu
 
 @Composable
 fun SettingsSection(
-
 ) {
-
-
     Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
         InstrumentSelectionSection()
         TempoSelectionSection()
     }
-
-
 }
 
 @Composable
@@ -54,7 +49,8 @@ fun InstrumentSelectionSection() {
             Icon(
                 painter = painterResource(id = R.drawable.ic_guitar_acoustic),
                 contentDescription = "Instrument",
-                modifier = Modifier.size(32.dp))
+                modifier = Modifier.size(32.dp)
+            )
 
             InstrumentsMenu()
         }

@@ -7,9 +7,7 @@ import com.gabriel4k2.fluidsynthdemo.domain.model.Octave
 
 typealias MidiToNoteMap = HashMap<Int, Note>
 
-fun MidiToNoteMap.naturalMusicOrder() : List<Note>{
-    return this.values.sortedWith( compareBy<Note> { it.chord  }.thenBy { it.octave })
-}
+
 
 object NoteUtils {
 
@@ -27,21 +25,21 @@ object NoteUtils {
         ...
         B6 -> 83
      */
-
-
-    fun generateMidiNumberToNoteNameMap(): MidiToNoteMap {
+    fun generateInitialNoteList(): List<Note> {
         val chord = Chord.orderedChords()
-
         val octaves = Octave.orderedOctaves()
-        val midiToNoteMap = MidiToNoteMap()
+        val noteList : MutableList<Note> = emptyList<Note>().toMutableList()
         chord.forEachIndexed { chordIndex, chord ->
             octaves.forEachIndexed { octaveIndex, octave ->
-                val index = 12 * octaveIndex + chordIndex
-                midiToNoteMap[index] = Note(chord, octave)
+                val midiNumber = 12 * octaveIndex + chordIndex
+                noteList.add(Note(chord = chord, octave= octave, midiNumber =  midiNumber, selected = true))
 
             }
         }
-        return midiToNoteMap
+        return noteList
     }
 
+    fun List<Note>.naturalMusicOrder() : List<Note> {
+        return this.sortedWith( compareBy<Note> { it.chord  }.thenBy { it.octave })
+    }
 }

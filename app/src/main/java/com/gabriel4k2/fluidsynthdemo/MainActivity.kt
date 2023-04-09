@@ -24,6 +24,7 @@ import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.ui.NoteDisplayer
 import com.gabriel4k2.fluidsynthdemo.ui.PlaybackController
 import com.gabriel4k2.fluidsynthdemo.ui.SettingsSection
+import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.NoteRangePickerActivity
 import com.gabriel4k2.fluidsynthdemo.ui.providers.*
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.Executors.newSingleThreadExecutor
@@ -34,7 +35,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: InstrumentViewModel by viewModels()
 
     var noteName: MutableState<String>? = null
-    val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
+//    val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
     private val audioThread = newSingleThreadExecutor()
     val jniHandle = JNIHandle()
 
@@ -102,12 +103,8 @@ class MainActivity : ComponentActivity() {
                                                     margin = dimensions.noteDisplayerRadius
                                                 )
                                             }) {
-                                        SettingsSection(
-
-                                        )
+                                        SettingsSection()
                                     }
-
-
 
                                     ExtendedFloatingActionButton(
                                         modifier = Modifier.constrainAs(FAB) {
@@ -129,7 +126,7 @@ class MainActivity : ComponentActivity() {
                                                 context,
                                                 NoteRangePickerActivity::class.java
                                             )
-                                            intent.putExtra("notes", midiToNoteMap)
+                                            intent.putParcelableArrayListExtra("notes", ArrayList(NoteUtils.generateInitialNoteList()))
                                             context.startActivity(
                                                 intent
                                             )
@@ -156,13 +153,13 @@ class MainActivity : ComponentActivity() {
     }
 
     // Called from JNI
-    fun onMidiNoteChanged(midiNumber: Int) {
-        var _noteName = midiToNoteMap[midiNumber]
-        if (_noteName != null) {
-            noteName?.value = _noteName.toString()
-        }
-
-    }
+//    fun onMidiNoteChanged(midiNumber: Int) {
+//        var _noteName = midiToNoteMap[midiNumber]
+//        if (_noteName != null) {
+//            noteName?.value = _noteName.toString()
+//        }
+//
+//    }
 
     inner class JNIHandle() : JNIInterface {
         override fun startPlayingNotesHandle(intervalInMs: Long, instrument: Instrument) {
