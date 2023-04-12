@@ -20,11 +20,15 @@ import com.gabriel4k2.fluidsynthdemo.ui.settings.time.TimePrecisionMenu
 
 @Composable
 fun SettingsSection(
+    modifier: Modifier
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        InstrumentSelectionSection()
-        TempoSelectionSection()
+    Column(modifier = modifier) {
+        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            InstrumentSelectionSection()
+            TempoSelectionSection()
+        }
     }
+
 }
 
 @Composable
@@ -60,7 +64,7 @@ fun InstrumentSelectionSection() {
 @Composable
 fun TempoSelectionSection() {
 
-    Column() {
+    Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),

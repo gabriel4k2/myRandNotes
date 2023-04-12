@@ -27,8 +27,13 @@ class SoundEngine(
     private val _playbackState: MutableStateFlow<SoundEnginePlaybackState> =
         MutableStateFlow(SoundEnginePlaybackState.LOADING)
 
-    private val _engineState : MutableStateFlow<SoundEngineState> = MutableStateFlow(SoundEngineState(noteGenerationConfig = UINoteGenerationConfig.UNKNOWN, playbackState = SoundEnginePlaybackState.LOADING))
-    val engineState : StateFlow<SoundEngineState> = _engineState
+    private val _engineState: MutableStateFlow<SoundEngineState> = MutableStateFlow(
+        SoundEngineState(
+            noteGenerationConfig = UINoteGenerationConfig.UNKNOWN,
+            playbackState = SoundEnginePlaybackState.LOADING
+        )
+    )
+    val engineState: StateFlow<SoundEngineState> = _engineState
 
     suspend fun setupEngine() {
         publishInitialState()
@@ -43,20 +48,31 @@ class SoundEngine(
                     instrument = config.instrument,
                     intervalInMs = config.timeIntervalMs
                 )
-            } else if(playback ==  SoundEnginePlaybackState.PAUSED  ) {
+            } else if (playback == SoundEnginePlaybackState.PAUSED) {
                 Log.e("Engine", "pausing $state")
                 jniHandle.pauseSynthHandle()
             }
-            _engineState.emit(SoundEngineState(noteGenerationConfig = config.toUINoteGenerationConfig(), playbackState = playback))
+            _engineState.emit(
+                SoundEngineState(
+                    noteGenerationConfig = config.toUINoteGenerationConfig(),
+                    playbackState = playback
+                )
+            )
         }
     }
 
     // Initial State, on which we are still expecting the configuration to be loaded from
     // the sharedPreferences
-    private suspend fun publishInitialState(){
-        _engineState.emit(SoundEngineState(noteGenerationConfig = UINoteGenerationConfig.UNKNOWN, playbackState = SoundEnginePlaybackState.LOADING))
+    private suspend fun publishInitialState() {
+        _engineState.emit(
+            SoundEngineState(
+                noteGenerationConfig = UINoteGenerationConfig.UNKNOWN,
+                playbackState = SoundEnginePlaybackState.LOADING
+            )
+        )
 
     }
+
     fun changePlaybackState(playbackState: SoundEnginePlaybackState) {
         coroutineScope.launch { _playbackState.emit(playbackState) }
     }

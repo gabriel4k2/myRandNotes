@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -63,6 +64,7 @@ fun NoteCard(
             )
             Image(
                 painter = painterResource(id = R.drawable.ic_checked),
+                colorFilter = ColorFilter.tint(Color(0.121f, 0.28f, 0.72f, 1f)),
                 contentDescription = null,
                 modifier = Modifier
                     .align(

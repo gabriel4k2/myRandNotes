@@ -5,6 +5,7 @@
     <application
         android:name=".FluidSynthDemoApplication"
         android:allowBackup="true"
+        android:launchMode="singleTop"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -17,7 +18,8 @@
             android:name=".ui.noteRangePicker.NoteRangePickerActivity"
             android:exported="false"
             android:label="noterangerpicker"
-            android:theme="@style/Theme.Fluidsynthdemo">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            >
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />

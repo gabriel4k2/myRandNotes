@@ -5,10 +5,6 @@ import com.gabriel4k2.fluidsynthdemo.domain.model.Note
 import com.gabriel4k2.fluidsynthdemo.domain.model.Octave
 
 
-typealias MidiToNoteMap = HashMap<Int, Note>
-
-
-
 object NoteUtils {
 
     /* Simple pattern to get the fully qualified note name (name and octave) from the midi

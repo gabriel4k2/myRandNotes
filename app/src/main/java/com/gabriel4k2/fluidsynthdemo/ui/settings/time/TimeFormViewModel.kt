@@ -4,12 +4,11 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.lifecycle.ViewModel
 import com.gabriel4k2.fluidsynthdemo.ui.model.TimeInSeconds
 import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalSoundEngineProvider
 import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsController
-import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
+import com.gabriel4k2.fluidsynthdemo.ui.model.ConfigChangeEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -78,7 +77,7 @@ class TimeFormViewModel @Inject constructor() : ViewModel() {
         }
         _uiState.update { it.copy(currentTime = finalTime, inErrorState = false) }
         if (finalTime != TimeInSeconds.UNKNOWN) {
-            dispatcher.dispatchChangeEvent(SettingsChangeEvent.TimeChangeEvent(finalTime.value))
+            dispatcher.dispatchChangeEvent(ConfigChangeEvent.TimeChangeEvent(finalTime.value))
         }
         return finalTime
     }

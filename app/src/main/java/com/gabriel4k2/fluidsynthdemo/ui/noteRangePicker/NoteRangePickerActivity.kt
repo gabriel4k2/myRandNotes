@@ -1,9 +1,11 @@
 package com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.os.PersistableBundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,91 +22,58 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntSize
+import com.gabriel4k2.InstrumentViewModel
+import com.gabriel4k2.fluidsynthdemo.MainActivity
 import com.gabriel4k2.fluidsynthdemo.R
 import com.gabriel4k2.fluidsynthdemo.domain.model.Note
+import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.grid.NoteRangePickerGrid
 import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils.naturalMusicOrder
 
 const val ITEMS_PER_ROW = 6
 
 class NoteRangePickerActivity : ComponentActivity() {
+    private val viewModel: NoteRangePickerActivityViewModel by viewModels()
 
-
-    @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val noteList = intent.getParcelableArrayListExtra<Note>("notes") as? List<Note>
+        setContentView(R.layout.activity_note_range_picker)
+        val notesBundleKey = getString(R.string.notes_bundle_key)
+        val noteList = intent.getParcelableArrayListExtra<Note>(notesBundleKey) as? List<Note>
+        if (noteList != null) {
+            viewModel.setNotesList(noteList)
+        }
         setContent {
-            val orderedNotes = remember(noteList) { noteList?.naturalMusicOrder() }
-            val typeTeste = FontFamily(Font(R.font.notomusic))
-            val gridState = rememberLazyGridState()
-            val coroutineScope = rememberCoroutineScope()
-            val gridAnimationChoreographer = remember {
-                GridAnimationChoreographer(coroutineScope, noteList ?: emptyList(), ITEMS_PER_ROW)
-            }
-            var gridItemSizeAlreadyKnown by remember { mutableStateOf(false) }
-
-            GetGridItemSizeEffect(gridItemSizeAlreadyKnown, gridState, gridAnimationChoreographer)
-
-            LazyVerticalGrid(modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        Log.e(
-                            "change and drag amount",
-                            change.toString() + " " + dragAmount.toString()
-                        )
-                        gridAnimationChoreographer.animateGridSelection(
-                            firstVisibleItemIndex = gridState.firstVisibleItemIndex,
-                            change = change,
-                            reverseDrag = dragAmount.x < 0
-                        )
-                    }
-
-                }, columns = GridCells.Fixed(ITEMS_PER_ROW), state = gridState, content = {
-                itemsIndexed(orderedNotes ?: emptyList()) { index, note ->
-                    NoteCard(Modifier.clickable {
-                        gridAnimationChoreographer.animateGridSelection(
-                            index
-                        )
-                    }, gridAnimationChoreographer.gridItemAnimationList[index], note, typeTeste)
-                }
-
-            })
+            NoteRangePickerGrid()
         }
 
     }
 
-    @Composable
-    private fun GetGridItemSizeEffect(
-        gridItemSizeAlreadyKnown: Boolean,
-        gridState: LazyGridState,
-        gridAnimationChoreographer: GridAnimationChoreographer
-    ) {
-        var gridItemSizeAlreadyKnown1 = gridItemSizeAlreadyKnown
-        LaunchedEffect(key1 = gridItemSizeAlreadyKnown1) {
-            if (!gridItemSizeAlreadyKnown1) {
-                snapshotFlow { gridState }.collect {
-                    if (it.layoutInfo.visibleItemsInfo.isNotEmpty() && it.layoutInfo.visibleItemsInfo.first().size != IntSize.Zero) {
-                        // All items have the same size
-                        gridAnimationChoreographer.setGridItemSize(it.layoutInfo.visibleItemsInfo.first().size)
-                        gridItemSizeAlreadyKnown1 = true
-                        gridAnimationChoreographer.setGridRowSize(
-                            it.layoutInfo.viewportSize.width
-                        )
-                    }
 
-                }
-            }
-
-        }
+    override fun onBackPressed() {
+        getUpdateNoteList()
     }
 
+    private fun getUpdateNoteList() {
+        val notesBundleKey = getString(R.string.notes_bundle_key)
+
+        val newNoteList = viewModel.retrieveNewNotesList()
+        val data = Intent(this, MainActivity::class.java).apply {
+            putParcelableArrayListExtra(
+                notesBundleKey,
+                ArrayList(newNoteList)
+            )
+            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        }
+
+        val resultCode = newNoteList.any { it.selected }
+        setResult(if (resultCode) RESULT_OK else RESULT_CANCELED, data)
+        finish()
+    }
 
 }

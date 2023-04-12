@@ -8,7 +8,7 @@ import androidx.lifecycle.ViewModel
 import com.gabriel4k2.fluidsynthdemo.ui.model.AvailablePrecisions
 import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalSoundEngineProvider
 import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsController
-import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
+import com.gabriel4k2.fluidsynthdemo.ui.model.ConfigChangeEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,7 +52,7 @@ class TimePrecisionViewModel @Inject constructor(
     fun onPrecisionSubmitted(dispatcher: NoteGeneratorSettingsController, precision: String) {
         val availablePrecisions = AvailablePrecisions.values().first { precisionEnum -> precisionEnum.value == precision }
         _uiState.update { it.copy(currentPrecision = availablePrecisions) }
-        dispatcher.dispatchChangeEvent(SettingsChangeEvent.PrecisionChangeEvent(availablePrecisions))
+        dispatcher.dispatchChangeEvent(ConfigChangeEvent.PrecisionChangeEvent(availablePrecisions))
     }
 
 }

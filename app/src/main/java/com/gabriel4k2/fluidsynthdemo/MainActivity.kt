@@ -3,28 +3,23 @@ package com.gabriel4k2.fluidsynthdemo
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.example.compose.AppTheme
 import com.gabriel4k2.InstrumentViewModel
-import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
-import com.gabriel4k2.fluidsynthdemo.ui.NoteDisplayer
-import com.gabriel4k2.fluidsynthdemo.ui.PlaybackController
+import com.gabriel4k2.fluidsynthdemo.ui.NoteDisplaySection
 import com.gabriel4k2.fluidsynthdemo.ui.SettingsSection
-import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.NoteRangePickerActivity
+import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.NoteRangePickerSection
 import com.gabriel4k2.fluidsynthdemo.ui.providers.*
 import dagger.hilt.android.AndroidEntryPoint
 import java.util.concurrent.Executors.newSingleThreadExecutor
@@ -32,12 +27,13 @@ import java.util.concurrent.Executors.newSingleThreadExecutor
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: InstrumentViewModel by viewModels()
+    private val instrumentViewModel: InstrumentViewModel by viewModels()
 
     var noteName: MutableState<String>? = null
-//    val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
+
+    //    val midiToNoteMap = NoteUtils.generateMidiNumberToNoteNameMap()
     private val audioThread = newSingleThreadExecutor()
-    val jniHandle = JNIHandle()
+    private val jniHandle = JNIHandle()
 
 
     init {
@@ -53,21 +49,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val sfFilePath = copyAssetToTmpFile("sfsource.sf2")
+
         audioThread.execute {
             startFluidSynthEngine(sfFilePath)
         }
 
-
-
         setContent {
-            val context = LocalContext.current
-            noteName = remember { mutableStateOf("-") }
             AppTheme {
                 ThemeProvider {
                     ShimmerProvider {
-                        NoteGeneratorSettingsDispatcherProvider(settingsStorage = viewModel.settingsStorage) {
+                        NoteGeneratorSettingsControllerProvider(settingsStorage = instrumentViewModel.settingsStorage) {
                             SoundEngineProvider(jniInterface = jniHandle) {
-
                                 val dimensions = LocalThemeProvider.current.dimensions
 
                                 ConstraintLayout(
@@ -76,64 +68,36 @@ class MainActivity : ComponentActivity() {
                                         .background(MaterialTheme.colors.background),
                                 ) {
                                     val (noteDisplayer, settingsSection, FAB) = createRefs()
-                                    Column(
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .constrainAs(noteDisplayer) {
-                                                top.linkTo(
-                                                    parent.top,
-                                                    margin = dimensions.noteDisplayerRadius + dimensions.noteDisplayerTopContainerPadding
-                                                )
-                                            }, horizontalAlignment = CenterHorizontally
-                                    ) {
-                                        NoteDisplayer(noteName!!.value)
-                                        PlaybackController()
 
 
-                                    }
 
-                                    Column(
-                                        Modifier
-                                            .padding(horizontal = 20.dp)
-                                            .constrainAs(settingsSection) {
-                                                centerHorizontallyTo(parent)
+                                    NoteDisplaySection(modifier = Modifier
+                                        .fillMaxWidth()
+                                        .constrainAs(noteDisplayer) {
+                                            top.linkTo(
+                                                anchor = parent.top,
+                                                margin = dimensions.noteDisplayerRadius + dimensions.noteDisplayerTopContainerPadding
+                                            )
+                                        })
 
-                                                top.linkTo(
-                                                    noteDisplayer.bottom,
-                                                    margin = dimensions.noteDisplayerRadius
-                                                )
-                                            }) {
-                                        SettingsSection()
-                                    }
-
-                                    ExtendedFloatingActionButton(
-                                        modifier = Modifier.constrainAs(FAB) {
+                                    SettingsSection(modifier = Modifier
+                                        .padding(horizontal = 20.dp)
+                                        .constrainAs(settingsSection) {
                                             centerHorizontallyTo(parent)
-                                            bottom.linkTo(
-                                                parent.bottom,
-                                                margin = 20.dp
+                                            top.linkTo(
+                                                noteDisplayer.bottom,
+                                                margin = dimensions.noteDisplayerRadius
                                             )
-                                        },
-                                        icon = {
-                                            Icon(
-                                                painter = painterResource(id = R.drawable.ic_music_note),
-                                                contentDescription = ""
-                                            )
-                                        },
-                                        text = { Text("CONFIGURE NOTE RANGE") },
-                                        onClick = {
-                                            val intent =  Intent(
-                                                context,
-                                                NoteRangePickerActivity::class.java
-                                            )
-                                            intent.putParcelableArrayListExtra("notes", ArrayList(NoteUtils.generateInitialNoteList()))
-                                            context.startActivity(
-                                                intent
-                                            )
-                                        },
-                                        backgroundColor = MaterialTheme.colors.primary,
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
+                                        })
+
+
+                                    NoteRangePickerSection(modifier = Modifier.constrainAs(FAB) {
+                                        centerHorizontallyTo(parent)
+                                        bottom.linkTo(
+                                            parent.bottom,
+                                            margin = 20.dp
+                                        )
+                                    })
 
                                 }
                             }
@@ -142,9 +106,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-
         }
-
     }
 
     override fun onPause() {
@@ -171,6 +133,11 @@ class MainActivity : ComponentActivity() {
             return audioThread.execute { pauseSynth() }
         }
 
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        Log.e("MainActivity", "Intent ${intent.toString()}")
     }
 
 }

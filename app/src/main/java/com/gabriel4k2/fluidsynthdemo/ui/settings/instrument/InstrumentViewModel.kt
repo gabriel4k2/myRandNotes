@@ -1,6 +1,5 @@
 package com.gabriel4k2
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -10,7 +9,7 @@ import com.gabriel4k2.fluidsynthdemo.domain.InstrumentUseCase
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
 import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalSoundEngineProvider
 import com.gabriel4k2.fluidsynthdemo.ui.providers.NoteGeneratorSettingsController
-import com.gabriel4k2.fluidsynthdemo.ui.settings.SettingsChangeEvent
+import com.gabriel4k2.fluidsynthdemo.ui.model.ConfigChangeEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,7 +19,6 @@ import javax.inject.Inject
 data class InstrumentUIState(
     val instruments: List<Instrument> = emptyList(),
     val currentInstrument: Instrument = Instrument.UNKNOWN
-
 )
 
 @HiltViewModel
@@ -28,7 +26,7 @@ class InstrumentViewModel @Inject constructor(
     private val instrumentUseCase: InstrumentUseCase,
     val settingsStorage: SettingsStorage
 
-    ) : ViewModel() {
+) : ViewModel() {
 
     private var _uiState: MutableStateFlow<InstrumentUIState> =
         MutableStateFlow(InstrumentUIState())
@@ -55,7 +53,7 @@ class InstrumentViewModel @Inject constructor(
     @Composable
     private fun RetrieveInstrumentList() {
         LaunchedEffect(key1 = true) {
-            val  instrumentList = instrumentUseCase.getOrderedAndProcessedInstrumentList()
+            val instrumentList = instrumentUseCase.getOrderedAndProcessedInstrumentList()
             _uiState.update {
                 it.copy(
                     instruments = instrumentList,
@@ -83,7 +81,11 @@ class InstrumentViewModel @Inject constructor(
             }
         }
 
-        dispatcher.dispatchChangeEvent(SettingsChangeEvent.InstrumentChangeEvent(matchedInstrument ?: uiState.currentInstrument))
+        dispatcher.dispatchChangeEvent(
+            ConfigChangeEvent.InstrumentChangeEvent(
+                matchedInstrument ?: uiState.currentInstrument
+            )
+        )
 
     }
 

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">fluidsynthdemo</string>
+    <string name="notes_bundle_key">notes</string>
 </resources>

@@ -49,8 +49,4 @@ fun InstrumentsMenu(viewModel: InstrumentViewModel = hiltViewModel()) {
                     })
             }
         }
-
-
-
-
 }
