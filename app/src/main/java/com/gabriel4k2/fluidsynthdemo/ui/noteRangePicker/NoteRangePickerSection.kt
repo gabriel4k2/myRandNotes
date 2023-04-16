@@ -47,7 +47,6 @@ fun NoteRangePickerSection(modifier: Modifier, viewModel : NoteRangePickerSectio
             } else {
                 viewModel.onNewNoteRangeSelected(noteGeneratorSettingsDispatcher, notes)
             }
-
         })
     ExtendedFloatingActionButton(
         modifier = modifier,

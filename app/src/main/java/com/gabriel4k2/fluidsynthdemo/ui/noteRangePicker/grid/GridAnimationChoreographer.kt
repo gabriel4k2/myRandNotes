@@ -1,5 +1,6 @@
 package com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.geometry.Offset
@@ -9,17 +10,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import com.gabriel4k2.fluidsynthdemo.domain.model.Note
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 private const val TIME_TOLERANCE =
     20 // 20 ms, a little more than a cycle in the standard 60hz freq.
 
+
 class GridAnimationChoreographer(
     private val coroutineScope: CoroutineScope,
     notes: List<Note>,
     private val itemsPerRow: Int,
-    val onZeroItemsSelected : () -> Unit
+    val onZeroItemsSelected: () -> Unit
 ) {
     var mNotes: MutableList<Note>
     private var gridItemSize: IntSize = IntSize.Zero
@@ -27,6 +32,7 @@ class GridAnimationChoreographer(
     private var numberOfSelectedGridItems: Int = 0
     var gridItemAnimationList: MutableList<GridItemAnimationState> =
         emptyList<GridItemAnimationState>().toMutableList()
+
 
     init {
         mNotes = notes.toMutableList()
@@ -41,6 +47,7 @@ class GridAnimationChoreographer(
                     isCurrentItemSelected = note.selected
                 )
             )
+
         }
     }
 
@@ -56,10 +63,24 @@ class GridAnimationChoreographer(
         }
     }
 
-    private fun getGridItemIndexFromOffset(firstVisibleItemIndex: Int, offset: Offset): Int {
-        val row = (offset.y.absoluteValue / gridItemSize.height).toInt()
+    private fun getGridItemIndexFromOffset(firstVisibleItemIndex: Int,         firstVisibleItemOffset: Int,
+                                           offset: Offset): Int {
+//        val row = if(offset.y.absoluteValue  < gridItemSize.height) firstVisibleItemIndex else  { ((offset.y.absoluteValue - firstVisibleItemOffset) / gridItemSize.height).toInt() + 1}
+        var row = firstVisibleItemIndex / itemsPerRow
+        val visibleSizeOfFirstCardRow = gridItemSize.height - firstVisibleItemOffset
+        if(offset.y > visibleSizeOfFirstCardRow){
+            var unconsumedYaxisOffset = offset.y - (gridItemSize.height - firstVisibleItemOffset)
+            do{
+                row+= 1
+                unconsumedYaxisOffset -= gridItemSize.height.toFloat()
+            } while (unconsumedYaxisOffset > 0)
+
+
+        }
+
+
         val column = (offset.x.absoluteValue / gridItemSize.width).toInt()
-        return firstVisibleItemIndex + row * itemsPerRow + column
+        return row * itemsPerRow + column
     }
 
     // If the drag is too fast then some cards will not be selected due
@@ -71,6 +92,7 @@ class GridAnimationChoreographer(
     private fun getOverlookedIndexes(
         previousPosition: Offset,
         currentDragPosition: Offset,
+        firstVisibleItemOffset: Int,
         firstVisibleItemIndex: Int
     ): List<Int>? {
         val indexes = emptyList<Int>().toMutableList()
@@ -84,7 +106,8 @@ class GridAnimationChoreographer(
                         firstVisibleItemIndex = firstVisibleItemIndex,
                         // We are looking for same row, overlooked items, so we pass the currentDrag
                         // y-axis
-                        offset = Offset(x = offset, y = currentDragPosition.y)
+                        offset = Offset(x = offset, y = currentDragPosition.y),
+                        firstVisibleItemOffset = firstVisibleItemOffset
                     )
                 )
                 offset += gridItemSize.width
@@ -98,6 +121,7 @@ class GridAnimationChoreographer(
 
     fun animateGridSelection(
         firstVisibleItemIndex: Int,
+        firstVisibleItemOffset: Int,
         change: PointerInputChange,
         reverseDrag: Boolean,
     ) {
@@ -107,43 +131,114 @@ class GridAnimationChoreographer(
         val previousDragPosition = change.previousPosition
 
         if (currentDragPosition.x < gridRowSize) {
+
             val lastItemToBeAnimatedIndex =
-                getGridItemIndexFromOffset(firstVisibleItemIndex, currentDragPosition)
+                getGridItemIndexFromOffset(firstVisibleItemIndex, firstVisibleItemOffset ,currentDragPosition)
 
             val overlookedItemsIndexes = if (recordedUptime - previousUptime > TIME_TOLERANCE) {
+                Log.e("GridAnimation", "Will not overlook process due to time")
+
                 null
             } else {
                 getOverlookedIndexes(
                     previousDragPosition,
                     currentDragPosition,
+                    firstVisibleItemOffset,
                     firstVisibleItemIndex
                 )
 
             }
 
-            coroutineScope.launch {
+
+
+            synchronized(this) {
+//                Log.e("GridAnimation", "Entering synchro")
                 val sequentialIndexesToBeAnimated =
                     listOf(lastItemToBeAnimatedIndex).plus(overlookedItemsIndexes ?: emptyList())
-                        .sortedBy { it }
+                        .sortedBy { it }.distinct()
+
+                val willBeDeselectedIndexes = sequentialIndexesToBeAnimated.mapNotNull {
+                    val index = it
+                    val incomingAnimationStatus =
+                        gridItemAnimationList[it].determineResultingAnimation(
+                            reverseDrag
+                        )
+                    val willDeselectItem =
+                        incomingAnimationStatus == GridItemAnimationState.GridItemAnimationStateStatus.WILL_DESELECTED
+                    if(willDeselectItem){
+                        index
+                    } else{
+                        null
+                    }
+
+                }
+
+
+                val willBeSelectedIndexes = sequentialIndexesToBeAnimated.minus(
+                    willBeDeselectedIndexes
+                ).mapNotNull {
+                    val index = it
+                    val incomingAnimationStatus =
+                        gridItemAnimationList[it].determineResultingAnimation(
+                            reverseDrag
+                        )
+                    val willSelectItem =
+                        incomingAnimationStatus == GridItemAnimationState.GridItemAnimationStateStatus.WILL_SELECT
+
+                    if(willSelectItem){
+                        index
+                    } else{
+                        null
+                    }
+
+                }
+
+                val selectedItemsCount =
+                    willBeSelectedIndexes.size
+
+                val deselectedItemsCount =
+                    willBeDeselectedIndexes.size
+
+                if(selectedItemsCount == 0 && deselectedItemsCount ==0) {
+                    Log.e(
+                        "GridAnimation",
+                        "No selectedItemsCount and deselectedItemsCount"
+                    )
+
+                    return@synchronized
+                }
 
                 val updatedNumberOfSelectedGridItems =
-                    numberOfSelectedGridItems + if (reverseDrag) {
-                        -sequentialIndexesToBeAnimated.size
-                    } else {
-                        sequentialIndexesToBeAnimated.size
-                    }
+                    numberOfSelectedGridItems - deselectedItemsCount + selectedItemsCount
+
+                Log.e(
+                    "GridAnimation",
+                    "Incoming update is  $updatedNumberOfSelectedGridItems current items: [$numberOfSelectedGridItems]" +
+                            " deselected items: [${willBeDeselectedIndexes}]  selected items: [ ${willBeSelectedIndexes}] outlooked $overlookedItemsIndexes"
+                )
+
 
                 if (updatedNumberOfSelectedGridItems == 0) {
+
                     onZeroItemsSelected()
                 } else {
-                    launch {
-                        sequentialIndexesToBeAnimated.forEach {
-                            gridItemAnimationList[it].triggerAnimation(
-                                reverseDrag
-                            )
-                        }
-                    }
                     numberOfSelectedGridItems = updatedNumberOfSelectedGridItems
+
+                    coroutineScope.launch {
+
+                        val animationJobs =
+                            sequentialIndexesToBeAnimated.fold(listOf<Deferred<Boolean>>()) { acc, it ->
+                                acc + this.async {
+                                    gridItemAnimationList[it].triggerAnimation(
+                                        reverseDrag
+                                    )
+                                }
+                            }
+                        awaitAll(*animationJobs.toTypedArray())
+//                        Log.e("GridAnimation", "Leaving synchro                         ${this.coroutineContext}\n")
+
+                    }
+
                 }
             }
         }
@@ -151,26 +246,34 @@ class GridAnimationChoreographer(
 
     // Callback to be used on card press, in order to perform selection
     fun animateGridSelection(index: Int) {
-        coroutineScope.launch {
-            val isSelected = gridItemAnimationList[index].isCurrentItemSelected
-            // If the item is selected then we are about to deselect it.
-            val updatedNumberOfSelectedGridItems = numberOfSelectedGridItems + if (isSelected) {
+        val isSelected = gridItemAnimationList[index].isCurrentItemSelected
+        val willBeDeselected =
+            gridItemAnimationList[index].determineResultingAnimation(isSelected) == GridItemAnimationState.GridItemAnimationStateStatus.WILL_DESELECTED
+
+        val updatedNumberOfSelectedGridItems =
+            numberOfSelectedGridItems + if (willBeDeselected) {
                 -1
             } else {
                 1
             }
 
 
-            if (updatedNumberOfSelectedGridItems == 0) {
-                onZeroItemsSelected()
-            } else {
+        if (updatedNumberOfSelectedGridItems == 0) {
+            onZeroItemsSelected()
+        } else {
+            coroutineScope.launch {
+                // If the item is selected then we are about to deselect it.
+
+
                 gridItemAnimationList[index].triggerAnimation(
                     isSelected
                 )
                 numberOfSelectedGridItems = updatedNumberOfSelectedGridItems
-            }
 
+
+            }
         }
+
     }
 
 }
@@ -184,21 +287,47 @@ class GridItemAnimationState(
     var itemAlpha = mutableStateOf(if (isCurrentItemSelected) 1f else 0f)
     private var animatable = Animatable(initialValue = 0F)
 
-    suspend fun triggerAnimation(cancelSelection: Boolean) : Boolean {
-        if ((!cancelSelection && !animatable.isRunning && !isCurrentItemSelected)) {
-            isCurrentItemSelected = true
-            animatable.animateTo(1f) {
-                itemSize.value =
-                    lerp(start = 0.dp, stop = CHECK_MARK_ICON_SIZE, fraction = this.value)
-                itemAlpha.value = lerp(start = 0f, stop = 1f, fraction = this.value)
-            }
 
-        } else if (cancelSelection) {
-            isCurrentItemSelected = false
-            animatable.animateTo(0f) {
-                itemSize.value = lerp(0.dp, stop = CHECK_MARK_ICON_SIZE, this.value)
-                itemAlpha.value = lerp(0f, stop = 1f, this.value)
+    fun determineResultingAnimation(cancelSelection: Boolean): GridItemAnimationStateStatus {
+        // If animation is running, then check if the selection and state have the same boolean
+        // value
+        // ie: Cancel action (cancelSelection == true) and item is selected  (isCurrentItemSelector == true)
+        // This is a NXOR
+        return if (!cancelSelection.xor(isCurrentItemSelected)) {
+            if (cancelSelection) {
+                GridItemAnimationStateStatus.WILL_DESELECTED
+            } else {
+                GridItemAnimationStateStatus.WILL_SELECT
             }
+        } else {
+            GridItemAnimationStateStatus.NONE
+        }
+    }
+
+
+    suspend fun triggerAnimation(cancelSelection: Boolean): Boolean {
+        when (determineResultingAnimation(cancelSelection)) {
+            GridItemAnimationStateStatus.WILL_SELECT -> {
+                Log.e("GridAnimation", "trigger selection")
+
+                isCurrentItemSelected = true
+                animatable.animateTo(1f) {
+                    itemSize.value =
+                        lerp(start = 0.dp, stop = CHECK_MARK_ICON_SIZE, fraction = this.value)
+                    itemAlpha.value = lerp(start = 0f, stop = 1f, fraction = this.value)
+                }
+
+            }
+            GridItemAnimationStateStatus.WILL_DESELECTED -> {
+                Log.e("GridAnimation", "trigger deselection")
+
+                isCurrentItemSelected = false
+                animatable.animateTo(0f) {
+                    itemSize.value = lerp(0.dp, stop = CHECK_MARK_ICON_SIZE, this.value)
+                    itemAlpha.value = lerp(0f, stop = 1f, this.value)
+                }
+            }
+            else -> {}
         }
 
         return isCurrentItemSelected
@@ -209,5 +338,10 @@ class GridItemAnimationState(
         return start + fraction * (stop - start)
     }
 
+    enum class GridItemAnimationStateStatus {
+        WILL_SELECT,
+        WILL_DESELECTED,
+        NONE
+    }
 
 }

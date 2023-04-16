@@ -54,7 +54,7 @@ class NoteRangePickerActivity : ComponentActivity() {
 
     }
 
-
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         getUpdateNoteList()
     }
