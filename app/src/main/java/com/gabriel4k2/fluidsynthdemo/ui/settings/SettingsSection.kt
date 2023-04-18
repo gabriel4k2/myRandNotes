@@ -1,7 +1,6 @@
 package com.gabriel4k2.fluidsynthdemo.ui
 
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -11,11 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.gabriel4k2.InstrumentViewModel
 import com.gabriel4k2.fluidsynthdemo.R
-import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
-import com.gabriel4k2.fluidsynthdemo.ui.customMenu.ExposedDropdownMenu
-import com.gabriel4k2.fluidsynthdemo.ui.providers.LocalNoteGeneratorSettingsDispatcherProvider
 import com.gabriel4k2.fluidsynthdemo.ui.settings.time.TimePrecisionMenu
 
 @Composable
@@ -80,7 +75,7 @@ fun TempoSelectionSection() {
 
             IconButton(modifier = Modifier.offset(x = 18.dp), onClick = { /*TODO*/ }) {
                 Icon(
-                    painter = painterResource(id = R.drawable.baseline_info_24),
+                    painter = painterResource(id = R.drawable.ic_info),
                     contentDescription = "Instrument",
                     modifier = Modifier.size(14.dp),
 

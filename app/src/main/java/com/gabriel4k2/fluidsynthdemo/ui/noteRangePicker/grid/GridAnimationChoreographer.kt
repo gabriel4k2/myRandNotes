@@ -63,18 +63,18 @@ class GridAnimationChoreographer(
         }
     }
 
-    private fun getGridItemIndexFromOffset(firstVisibleItemIndex: Int,         firstVisibleItemOffset: Int,
-                                           offset: Offset): Int {
-//        val row = if(offset.y.absoluteValue  < gridItemSize.height) firstVisibleItemIndex else  { ((offset.y.absoluteValue - firstVisibleItemOffset) / gridItemSize.height).toInt() + 1}
+    private fun getGridItemIndexFromOffset(
+        firstVisibleItemIndex: Int, firstVisibleItemOffset: Int,
+        offset: Offset
+    ): Int {
         var row = firstVisibleItemIndex / itemsPerRow
         val visibleSizeOfFirstCardRow = gridItemSize.height - firstVisibleItemOffset
-        if(offset.y > visibleSizeOfFirstCardRow){
+        if (offset.y > visibleSizeOfFirstCardRow) {
             var unconsumedYaxisOffset = offset.y - (gridItemSize.height - firstVisibleItemOffset)
-            do{
-                row+= 1
+            do {
+                row += 1
                 unconsumedYaxisOffset -= gridItemSize.height.toFloat()
             } while (unconsumedYaxisOffset > 0)
-
 
         }
 
@@ -133,11 +133,13 @@ class GridAnimationChoreographer(
         if (currentDragPosition.x < gridRowSize) {
 
             val lastItemToBeAnimatedIndex =
-                getGridItemIndexFromOffset(firstVisibleItemIndex, firstVisibleItemOffset ,currentDragPosition)
+                getGridItemIndexFromOffset(
+                    firstVisibleItemIndex,
+                    firstVisibleItemOffset,
+                    currentDragPosition
+                )
 
             val overlookedItemsIndexes = if (recordedUptime - previousUptime > TIME_TOLERANCE) {
-                Log.e("GridAnimation", "Will not overlook process due to time")
-
                 null
             } else {
                 getOverlookedIndexes(
@@ -152,7 +154,8 @@ class GridAnimationChoreographer(
 
 
             synchronized(this) {
-//                Log.e("GridAnimation", "Entering synchro")
+                // distinct() avoid edges cases on which the lastItemToBeAnimatedIndex is contained in
+                // the overlooked list
                 val sequentialIndexesToBeAnimated =
                     listOf(lastItemToBeAnimatedIndex).plus(overlookedItemsIndexes ?: emptyList())
                         .sortedBy { it }.distinct()
@@ -165,9 +168,9 @@ class GridAnimationChoreographer(
                         )
                     val willDeselectItem =
                         incomingAnimationStatus == GridItemAnimationState.GridItemAnimationStateStatus.WILL_DESELECTED
-                    if(willDeselectItem){
+                    if (willDeselectItem) {
                         index
-                    } else{
+                    } else {
                         null
                     }
 
@@ -175,7 +178,7 @@ class GridAnimationChoreographer(
 
 
                 val willBeSelectedIndexes = sequentialIndexesToBeAnimated.minus(
-                    willBeDeselectedIndexes
+                    willBeDeselectedIndexes.toSet()
                 ).mapNotNull {
                     val index = it
                     val incomingAnimationStatus =
@@ -185,9 +188,9 @@ class GridAnimationChoreographer(
                     val willSelectItem =
                         incomingAnimationStatus == GridItemAnimationState.GridItemAnimationStateStatus.WILL_SELECT
 
-                    if(willSelectItem){
+                    if (willSelectItem) {
                         index
-                    } else{
+                    } else {
                         null
                     }
 
@@ -199,12 +202,7 @@ class GridAnimationChoreographer(
                 val deselectedItemsCount =
                     willBeDeselectedIndexes.size
 
-                if(selectedItemsCount == 0 && deselectedItemsCount ==0) {
-                    Log.e(
-                        "GridAnimation",
-                        "No selectedItemsCount and deselectedItemsCount"
-                    )
-
+                if (selectedItemsCount == 0 && deselectedItemsCount == 0) {
                     return@synchronized
                 }
 
@@ -219,7 +217,6 @@ class GridAnimationChoreographer(
 
 
                 if (updatedNumberOfSelectedGridItems == 0) {
-
                     onZeroItemsSelected()
                 } else {
                     numberOfSelectedGridItems = updatedNumberOfSelectedGridItems
@@ -235,7 +232,6 @@ class GridAnimationChoreographer(
                                 }
                             }
                         awaitAll(*animationJobs.toTypedArray())
-//                        Log.e("GridAnimation", "Leaving synchro                         ${this.coroutineContext}\n")
 
                     }
 
@@ -263,14 +259,10 @@ class GridAnimationChoreographer(
         } else {
             coroutineScope.launch {
                 // If the item is selected then we are about to deselect it.
-
-
                 gridItemAnimationList[index].triggerAnimation(
                     isSelected
                 )
                 numberOfSelectedGridItems = updatedNumberOfSelectedGridItems
-
-
             }
         }
 
@@ -289,10 +281,9 @@ class GridItemAnimationState(
 
 
     fun determineResultingAnimation(cancelSelection: Boolean): GridItemAnimationStateStatus {
-        // If animation is running, then check if the selection and state have the same boolean
-        // value
-        // ie: Cancel action (cancelSelection == true) and item is selected  (isCurrentItemSelector == true)
-        // This is a NXOR
+        // Trigger the animation if cancelSelection and isCurrentItemSelected have the same boolean
+        /// value ie: Cancel action (cancelSelection == true) and item is selected
+        // (isCurrentItemSelector == true). This is a NXOR.
         return if (!cancelSelection.xor(isCurrentItemSelected)) {
             if (cancelSelection) {
                 GridItemAnimationStateStatus.WILL_DESELECTED
@@ -324,7 +315,7 @@ class GridItemAnimationState(
                 isCurrentItemSelected = false
                 animatable.animateTo(0f) {
                     itemSize.value = lerp(0.dp, stop = CHECK_MARK_ICON_SIZE, this.value)
-                    itemAlpha.value = lerp(0f, stop = 1f, this.value)
+                    itemAlpha.value = lerp(start = 0f, stop = 1f,fraction =  this.value)
                 }
             }
             else -> {}

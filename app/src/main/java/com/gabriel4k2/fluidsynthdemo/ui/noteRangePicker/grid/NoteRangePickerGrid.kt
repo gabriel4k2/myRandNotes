@@ -4,43 +4,33 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.Divider
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gabriel4k2.fluidsynthdemo.R
+import com.gabriel4k2.fluidsynthdemo.ui.OnZeroNotesSelectionDialog
 import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.GridAnimationChoreographer
 import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.ITEMS_PER_ROW
 import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.NoteCard
 import com.gabriel4k2.fluidsynthdemo.ui.noteRangePicker.NoteRangePickerActivityViewModel
 import com.gabriel4k2.fluidsynthdemo.utils.NoteUtils.naturalMusicOrder
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlin.math.absoluteValue
 
 @Composable
@@ -60,18 +50,21 @@ fun NoteRangePickerGrid(viewModel: NoteRangePickerActivityViewModel = hiltViewMo
     // wait for gridAnimation Initialization
     val gridAnimationChoreographer = uiState.gridAnimationChoreographer ?: return
 
-    LaunchedEffect(key1 = true){
-        alertUser = viewModel.alertUser.receive()
+    LaunchedEffect(key1 = true) {
+        viewModel.alertUser.consumeAsFlow().collect {
+            alertUser = it
+        }
     }
 
     GetGridItemSizeEffect(gridState, gridAnimationChoreographer)
 
-    if(alertUser){
-        AlertDialog(properties = DialogProperties(), onDismissRequest = { alertUser = false }, buttons = { Text("ok")})
+    if (alertUser) {
+        OnZeroNotesSelectionDialog(text = "At least one note should be selected") {
+            alertUser = false
+        }
+
     }
-    var lineHeight by remember {
-        mutableStateOf(0f)
-    }
+
 
     Box {
         LazyVerticalGrid(modifier = Modifier
@@ -79,7 +72,6 @@ fun NoteRangePickerGrid(viewModel: NoteRangePickerActivityViewModel = hiltViewMo
             .pointerInput(Unit) {
                 detectDragGestures { change, dragAmount ->
                     change.consume()
-                    lineHeight = change.position.y.absoluteValue
                     gridAnimationChoreographer.animateGridSelection(
                         firstVisibleItemIndex = gridState.firstVisibleItemIndex,
                         firstVisibleItemOffset = gridState.firstVisibleItemScrollOffset,
@@ -89,7 +81,7 @@ fun NoteRangePickerGrid(viewModel: NoteRangePickerActivityViewModel = hiltViewMo
                 }
 
             }, columns = GridCells.Fixed(ITEMS_PER_ROW), state = gridState, content = {
-            itemsIndexed(orderedNotes ) { index, note ->
+            itemsIndexed(orderedNotes) { index, note ->
                 NoteCard(
                     Modifier.clickable {
                         gridAnimationChoreographer.animateGridSelection(
@@ -102,8 +94,6 @@ fun NoteRangePickerGrid(viewModel: NoteRangePickerActivityViewModel = hiltViewMo
                 )
             }
         })
-//        Divider(color = Color.Red, thickness = 5.dp, modifier = Modifier.offset(x=0.dp, y = lineHeight.toInt().dp).fillMaxWidth().zIndex(4f).align(
-//            Alignment.TopStart))
 
     }
 
