@@ -118,6 +118,15 @@ class GridAnimationChoreographer(
 
     }
 
+    fun animateAllGrids(){
+        gridItemAnimationList.forEach {
+            coroutineScope.launch {it.triggerAnimation(
+                false
+            )  }
+            numberOfSelectedGridItems = mNotes.size
+
+        }
+    }
 
     fun animateGridSelection(
         firstVisibleItemIndex: Int,

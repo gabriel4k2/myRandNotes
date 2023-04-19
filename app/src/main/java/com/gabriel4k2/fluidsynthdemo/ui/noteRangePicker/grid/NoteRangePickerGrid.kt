@@ -34,8 +34,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlin.math.absoluteValue
 
 @Composable
-fun NoteRangePickerGrid(viewModel: NoteRangePickerActivityViewModel = hiltViewModel()) {
-    viewModel.SetAnimationChoreographerEffect()
+fun NoteRangePickerGrid(viewModel: NoteRangePickerActivityViewModel ) {
 
     val uiState by viewModel.uiSate.collectAsState()
     val notes = uiState.notes

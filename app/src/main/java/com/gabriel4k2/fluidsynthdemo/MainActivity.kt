@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.core.content.ContextCompat
 import com.example.compose.AppTheme
 import com.gabriel4k2.InstrumentViewModel
 import com.gabriel4k2.fluidsynthdemo.domain.model.Instrument
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.statusBarColor = ContextCompat.getColor(this, R.color.primaryDarkVariant)
 
         val sfFilePath = copyAssetToTmpFile("sfsource.sf2")
 

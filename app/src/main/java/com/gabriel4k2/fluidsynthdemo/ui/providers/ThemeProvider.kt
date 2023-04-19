@@ -40,9 +40,6 @@ val Typography = Typography(
 )
 
 class Dimensions(configuration : Configuration){
-    // Color 1e90ff
-    val containerHorizontalPadding = 20.dp
-    val largePadding = 32.dp
     val noteDisplayerHorizontalContainerPadding  = 70.dp
     val noteDisplayerTopContainerPadding  = noteDisplayerHorizontalContainerPadding/2
     val noteDisplayerRadius = ((configuration.screenWidthDp.dp - noteDisplayerHorizontalContainerPadding.times(2))/2)

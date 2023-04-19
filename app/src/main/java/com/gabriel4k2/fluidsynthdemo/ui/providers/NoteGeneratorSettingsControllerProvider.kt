@@ -68,7 +68,6 @@ class NoteGeneratorSettingsController constructor(
 
     fun setupSettingsChangeListener() {
         coroutineScope.launch {
-            delay(5000)
             publishStoredConfig()
             combine(
                 precisionFlow,
