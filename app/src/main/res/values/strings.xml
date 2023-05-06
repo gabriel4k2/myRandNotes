@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">myRandNotes</string>
+    <string name="notes_bundle_key">notes</string>
+</resources>
