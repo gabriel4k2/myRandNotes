@@ -1,0 +1,278 @@
+[
+  {
+    "type": "piano",
+    "patch_number": "0",
+    "instrument_name": "Stereo Grand",
+    "bank_offset": "0"
+  },
+  {
+    "type": "piano",
+    "patch_number": "1",
+    "instrument_name": "Bright Grand",
+    "bank_offset": "0"
+  },
+  {
+    "type": "piano",
+    "patch_number": "2",
+    "instrument_name": "Electric Grand",
+    "bank_offset": "0"
+  },
+  {
+    "type": "piano",
+    "patch_number": "3",
+    "instrument_name": "Honky-Tonk",
+    "bank_offset": "0"
+  },
+  {
+    "type": "piano",
+    "patch_number": "4",
+    "instrument_name": "Tine Electric Piano",
+    "bank_offset": "0"
+  },
+  {
+    "type": "piano",
+    "patch_number": "5",
+    "instrument_name": "FM Electric Piano",
+    "bank_offset": "0"
+  },
+  {
+    "type": "piano",
+    "patch_number": "0",
+    "instrument_name": "Piano & Str.-Fade",
+    "bank_offset": "11"
+  },
+  {
+    "type": "piano",
+    "patch_number": "1",
+    "instrument_name": "Piano & Str.-Sus",
+    "bank_offset": "11"
+  },
+  {
+    "type": "piano",
+    "patch_number": "5",
+    "instrument_name": "Piano & FM EP",
+    "bank_offset": "11"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "24",
+    "instrument_name": "Nylon Guitar",
+    "bank_offset": "0"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "25",
+    "instrument_name": "Steel Guitar",
+    "bank_offset": "0"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "26",
+    "instrument_name": "Jazz Guitar",
+    "bank_offset": "0"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "27",
+    "instrument_name": "Clean Guitar",
+    "bank_offset": "0"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "28",
+    "instrument_name": "Muted Guitar",
+    "bank_offset": "0"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "29",
+    "instrument_name": "Overdrive Guitar",
+    "bank_offset": "0"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "30",
+    "instrument_name": "Distortion Guitar",
+    "bank_offset": "0"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "25",
+    "instrument_name": "12-String Guitar",
+    "bank_offset": "8"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "26",
+    "instrument_name": "Hawaiian Guitar",
+    "bank_offset": "8"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "28",
+    "instrument_name": "Funk Guitar",
+    "bank_offset": "8"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "30",
+    "instrument_name": "Feedback Guitar",
+    "bank_offset": "8"
+  },
+  {
+    "type": "guitar",
+    "patch_number": "31",
+    "instrument_name": "Guitar Feedback",
+    "bank_offset": "8"
+  },
+  {
+    "type": "bass",
+    "patch_number": "32",
+    "instrument_name": "Acoustic Bass",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "33",
+    "instrument_name": "Finger Bass",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "34",
+    "instrument_name": "Pick Bass",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "35",
+    "instrument_name": "Fretless Bass",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "36",
+    "instrument_name": "Slap Bass 1",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "37",
+    "instrument_name": "Slap Bass 2",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "38",
+    "instrument_name": "Synth Bass 1",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "39",
+    "instrument_name": "Synth Bass 2",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bass",
+    "patch_number": "43",
+    "instrument_name": "Double Bass",
+    "bank_offset": "0"
+  },
+  {
+    "type": "sax",
+    "patch_number": "64",
+    "instrument_name": "Soprano Sax",
+    "bank_offset": "0"
+  },
+  {
+    "type": "sax",
+    "patch_number": "65",
+    "instrument_name": "Alto Sax",
+    "bank_offset": "0"
+  },
+  {
+    "type": "sax",
+    "patch_number": "66",
+    "instrument_name": "Tenor Sax",
+    "bank_offset": "0"
+  },
+  {
+    "type": "sax",
+    "patch_number": "67",
+    "instrument_name": "Baritone Sax",
+    "bank_offset": "0"
+  },
+  {
+    "type": "oboe",
+    "patch_number": "68",
+    "instrument_name": "Oboe",
+    "bank_offset": "0"
+  },
+  {
+    "type": "cello",
+    "patch_number": "42",
+    "instrument_name": "Cello",
+    "bank_offset": "0"
+  },
+  {
+    "type": "harp",
+    "patch_number": "46",
+    "instrument_name": "Orchestral Harp",
+    "bank_offset": "0"
+  },
+  {
+    "type": "bassoon",
+    "patch_number": "70",
+    "instrument_name": "Bassoon",
+    "bank_offset": "0"
+  },
+  {
+    "type": "trumpet",
+    "patch_number": "56",
+    "instrument_name": "Trumpet",
+    "bank_offset": "0"
+  },
+  {
+    "type": "tuba",
+    "patch_number": "58",
+    "instrument_name": "Tuba",
+    "bank_offset": "0"
+  },
+  {
+    "type": "accordian",
+    "patch_number": "21",
+    "instrument_name": "Accordian",
+    "bank_offset": "0"
+  },
+  {
+    "type": "banjo",
+    "patch_number": "105",
+    "instrument_name": "Banjo",
+    "bank_offset": "0"
+  },
+  {
+    "type": "flute",
+    "patch_number": "73",
+    "instrument_name": "Flute",
+    "bank_offset": "0"
+  },
+  {
+    "type": "clarinet",
+    "patch_number": "71",
+    "instrument_name": "Clarinet",
+    "bank_offset": "0"
+  },
+  {
+    "type": "violin",
+    "patch_number": "40",
+    "instrument_name": "Violin",
+    "bank_offset": "0"
+  },
+  {
+    "type": "viola",
+    "patch_number": "41",
+    "instrument_name": "Viola",
+    "bank_offset": "0"
+  }
+]
