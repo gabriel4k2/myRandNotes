@@ -8,6 +8,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        release {
+            storeFile  file(MY_RAND_NOTES_KEYSTORE_FULL_PATH)
+            storePassword MY_RAND_NOTES_STORE_PASSWORD
+            keyPassword MY_RAND_NOTES_KEY_PASSWORD
+            keyAlias MY_RAND_NOTES_KEY_ALIAS
+        }
+    }
     namespace 'com.gabriel4k2.myRandNotes'
     compileSdk 33
     aaptOptions {
@@ -36,9 +44,11 @@ android {
                 arguments "-DCMAKE_VERBOSE_MAKEFILE=ON"
             }
         }
+        signingConfig signingConfigs.release
     }
     buildTypes {
         release {
+            debuggable(false)
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
