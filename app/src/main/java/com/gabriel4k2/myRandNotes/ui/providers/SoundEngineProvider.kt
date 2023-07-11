@@ -28,7 +28,7 @@ fun SoundEngineProvider(jniHandle: JNIInterface, content: @Composable () -> Unit
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, event ->
-            if(event == Lifecycle.Event.ON_PAUSE){
+            if (event == Lifecycle.Event.ON_PAUSE) {
                 soundEngine.changePlaybackState(SoundEnginePlaybackState.PAUSED)
             }
         }

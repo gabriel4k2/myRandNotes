@@ -11,7 +11,7 @@ import com.gabriel4k2.myRandNotes.data.SoundEnginePlaybackState
 import com.gabriel4k2.myRandNotes.ui.providers.LocalSoundEngineProvider
 
 @Composable
-fun PlaybackController(modifier: Modifier =  Modifier) {
+fun PlaybackController(modifier: Modifier = Modifier) {
     val engine = LocalSoundEngineProvider.current
     val engineState = engine.engineState.collectAsState()
     val playbackState = engineState.value.playbackState
@@ -27,7 +27,7 @@ fun PlaybackController(modifier: Modifier =  Modifier) {
         else -> null
     }
 
-    IconButton(modifier = modifier, enabled = playbackState !=  SoundEnginePlaybackState.LOADING, onClick = {
+    IconButton(modifier = modifier, enabled = playbackState != SoundEnginePlaybackState.LOADING, onClick = {
         if (commandToIssue != null) {
             engine.changePlaybackState(commandToIssue)
         }

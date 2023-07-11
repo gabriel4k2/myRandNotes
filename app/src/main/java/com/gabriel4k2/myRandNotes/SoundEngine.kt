@@ -4,7 +4,10 @@ import com.gabriel4k2.myRandNotes.ui.model.UINoteGenerationConfig
 import com.gabriel4k2.myRandNotes.ui.providers.JNIInterface
 import com.gabriel4k2.myRandNotes.ui.providers.NoteGeneratorSettingsController
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 enum class SoundEnginePlaybackState {
