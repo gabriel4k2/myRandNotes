@@ -28,7 +28,7 @@ fun NoteDisplaySection(modifier: Modifier, viewModel: NoteDisplayViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         NoteDisplay(viewModel)
-        PlaybackController(Modifier.padding(top= 20.dp))
+        PlaybackController(Modifier.padding(top = 20.dp))
     }
 }
 
