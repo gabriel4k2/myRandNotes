@@ -26,7 +26,7 @@ object NoteUtils {
         val noteList: MutableList<Note> = emptyList<Note>().toMutableList()
         chord.forEach { chord ->
             octaves.forEach { octave ->
-                val midiNumber = 12 * octave.value.toInt() + (chord.order - 1)
+                val midiNumber = 12 * octave.value.toInt() + (chord.order)
                 noteList.add(Note(chord = chord, octave = octave, midiNumber = midiNumber, selected = true))
             }
         }

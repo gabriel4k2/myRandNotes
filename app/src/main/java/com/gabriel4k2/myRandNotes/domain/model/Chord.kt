@@ -5,16 +5,18 @@ import kotlinx.parcelize.Parcelize
 
 @Parcelize
 enum class Chord(val value: String, val order: Int) : Parcelable {
-    C("C", 1),
-    CSHARP("C#", 2),
-    D("D", 3),
-    DSHARP("D#", 4),
-    E("E", 5),
-    F("F", 6),
-    FSHARP("F#", 7),
+    C("C", 0),
+    CSHARP("C#", 1),
+    D("D", 2),
+    DSHARP("D#", 3),
+    E("E", 4),
+    F("F", 5),
+    FSHARP("F#", 6),
+    G("G", 7),
     GSHARP("G#", 8),
     A("A", 9),
-    B("B", 10);
+    ASHARP("A#", 10),
+    B("B", 11);
 
     companion object {
         fun orderedChords(): List<Chord> {
