@@ -9,9 +9,9 @@
 <img src="previews/app_preview.svg"/>
 </p>
 
+https://github.com/gabriel4k2/myRandNotes/assets/32650504/6ff68bbe-9c11-4b89-ae6c-a7c980b22cfb
 
 ## Tech stack and libraries
-
 
 - Asynchronous event/data handling with [Coroutines](https://github.com/Kotlin/kotlinx.coroutines) and [Flow](https://kotlin.github.io/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/).
 - Jetpack
@@ -20,16 +20,13 @@
   - [Hilt](https://dagger.dev/hilt/): for dependency injection.
   - Compose: for making beautiful declaratively-made UIs.
 - Architecture
-  - MVVM Architecture (View - ViewModel - Model).
-
- 
+  - MVVM Architecture (View - ViewModel - Model). 
 - [Fluidsynth](https://github.com/FluidSynth/fluidsynth): State-of-the-art  MIDI-based audio synthesizer open source software.
 - [Moshi](https://github.com/square/moshi/): A modern JSON library for Kotlin and Java.
 - NDK: Toolchain for compiling C/C++ code for multiple ABI architectures.
 - JNI: Library for handling Java and C/C++ code integration.
 
 ## Architecture
-
 
 Bellow follows a diagram representation of the app's architecture:
 <p align="center">
